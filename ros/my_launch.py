@@ -6,7 +6,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    world_file = 'my_world_v3.sdf'
+    world_file = '/root/ros/my_world_v4.sdf'
 
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
     pkg_turtlebot3_gazebo = get_package_share_directory('turtlebot3_gazebo')
@@ -17,6 +17,11 @@ def generate_launch_description():
     gz_resource_path = AppendEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=f"{models_path}:{share_path}"
+    )
+    
+    gz_plugin_path = AppendEnvironmentVariable(
+        name='GZ_SIM_SYSTEM_PLUGIN_PATH',
+        value='/opt/ros/jazzy/lib/gz-sim-8/plugins'
     )
 
     gz_sim = IncludeLaunchDescription(
@@ -40,7 +45,30 @@ def generate_launch_description():
         arguments=[
             '-name', 'waffle',
             '-topic', 'robot_description',
-            '-x', '0.0', '-y', '0.0', '-z', '0.1'
+            '-x', '0.0', '-y', '0.0', '-z', '0.1',
+            '-string', '''
+                <sdf version="1.6">
+                    <model name="waffle_with_sensors">
+                        <include>
+                            <uri>model://turtlebot3_waffle</uri>
+                        </include>
+
+                        <plugin filename="ignition-gazebo-diff-drive-system" name="ignition::gazebo::systems::DiffDrive">
+                            <left_joint>wheel_left_joint</left_joint>
+                            <right_joint>wheel_right_joint</right_joint>
+                            <wheel_separation>0.287</wheel_separation>
+                            <wheel_radius>0.033</wheel_radius>
+                            <topic>/cmd_vel</topic>
+                            <odom_publish_frequency>30</odom_publish_frequency>
+                        </plugin>
+
+                        <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
+                            <render_engine>ogre2</render_engine>
+                        </plugin>
+
+                    </model>
+                </sdf>
+            '''
         ],
         output='screen',
     )
@@ -51,7 +79,7 @@ def generate_launch_description():
         executable='parameter_bridge',
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
+            '/cmd_vel@geometry_msgs/msg/TwistStamped]gz.msgs.Twist',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
             '/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
@@ -63,6 +91,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         gz_resource_path,
+        gz_plugin_path,
         gz_sim,
         robot_state_publisher,
         spawn_entity,
