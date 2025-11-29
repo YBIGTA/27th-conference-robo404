@@ -83,10 +83,6 @@ docker run -it --rm \
         │  └─yolo_ros/
         └─my_packages/
             ├─my_robot_bringup/ # 로봇 실행 및 통합 설정 패키지
-            │   ├─launch/
-            │   ├─maps/
-            │   ├─worlds/
-            │   └─...
             └─ # yolo 관련 커스텀 패키지 폴더 등...
 ```
 
