@@ -1,23 +1,20 @@
-#!/usr/bin/env python3
 # Copyright (C) 2023 Miguel Ángel González Santamarta
-#
+
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
+
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import List, Dict, Tuple, Optional
-from collections import deque
-import time
 
+from typing import List, Dict
 from cv_bridge import CvBridge
 
 import rclpy
@@ -53,9 +50,7 @@ class YoloNode(LifecycleNode):
     def __init__(self) -> None:
         super().__init__("yolo_node")
 
-        # -------------------------
-        # 기본 params (원본 그대로)
-        # -------------------------
+        # params
         self.declare_parameter("model_type", "YOLO")
         self.declare_parameter("model", "yolov8m.pt")
         self.declare_parameter("device", "cuda:0")
@@ -73,16 +68,7 @@ class YoloNode(LifecycleNode):
         self.declare_parameter("agnostic_nms", False)
         self.declare_parameter("retina_masks", False)
 
-        # -------------------------
-        # 디버그용 추가 params
-        # -------------------------
-        # latency 로깅 on/off + 몇 프레임마다 평균 찍을지
-        self.declare_parameter("debug_timing", True)
-        self.declare_parameter("debug_interval", 30)
-
         self.type_to_model = {"YOLO": YOLO, "World": YOLOWorld, "YOLOE": YOLOE}
-
-        # 디버그용 상태 변수는 on_configure에서 초기화
 
     def on_configure(self, state: LifecycleState) -> TransitionCallbackReturn:
         self.get_logger().info(f"[{self.get_name()}] Configuring...")
@@ -124,15 +110,7 @@ class YoloNode(LifecycleNode):
             self.get_parameter("image_reliability").get_parameter_value().integer_value
         )
 
-        # debug params
-        self.debug_timing = (
-            self.get_parameter("debug_timing").get_parameter_value().bool_value
-        )
-        self.debug_interval = (
-            self.get_parameter("debug_interval").get_parameter_value().integer_value
-        )
-
-        # detection pub QoS
+        # detection pub
         self.image_qos_profile = QoSProfile(
             reliability=self.reliability,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -143,21 +121,6 @@ class YoloNode(LifecycleNode):
         self._pub = self.create_lifecycle_publisher(DetectionArray, "detections", 10)
         self.cv_bridge = CvBridge()
 
-        # -------------------------
-        # 디버그용 타이밍 버퍼 초기화
-        # -------------------------
-        # (cv, infer, post, total) ms 값 저장
-        self._timing_buffer: deque[Tuple[float, float, float, float]] = deque(
-            maxlen=200
-        )
-        self._frame_count: int = 0
-        self._last_wall_time: Optional[float] = None
-
-        self.get_logger().info(
-            f"[{self.get_name()}] Debug timing: {self.debug_timing}, "
-            f"interval: {self.debug_interval}"
-        )
-
         super().on_configure(state)
         self.get_logger().info(f"[{self.get_name()}] Configured")
 
@@ -166,7 +129,6 @@ class YoloNode(LifecycleNode):
     def on_activate(self, state: LifecycleState) -> TransitionCallbackReturn:
         self.get_logger().info(f"[{self.get_name()}] Activating...")
 
-        # 모델 로딩
         try:
             self.yolo = self.type_to_model[self.model_type](self.model)
         except FileNotFoundError:
@@ -364,140 +326,67 @@ class YoloNode(LifecycleNode):
         return keypoints_list
 
     def image_cb(self, msg: Image) -> None:
-        """
-        메인 이미지 콜백.
-        원래 로직은 그대로 두고, 그 위/아래로 latency 측정 코드만 추가.
-        """
 
-        if not self.enable:
-            return
+        if self.enable:
 
-        # -----------------------------
-        # 0) 프레임 시작 시간 기록
-        # -----------------------------
-        t0 = time.time()
-        self._frame_count += 1
-
-        # -----------------------------
-        # 1) cv_bridge 변환 (ROS Image -> OpenCV)
-        # -----------------------------
-        t_cv0 = time.time()
-        try:
+            # convert image + predict
             cv_image = self.cv_bridge.imgmsg_to_cv2(
                 msg, desired_encoding=self.yolo_encoding
             )
-        except Exception as e:
-            self.get_logger().error(f"cv_bridge conversion failed: {e}")
-            return
-        t_cv1 = time.time()
-        cv_time = (t_cv1 - t_cv0) * 1000.0  # ms
+            results = self.yolo.predict(
+                source=cv_image,
+                verbose=False,
+                stream=False,
+                conf=self.threshold,
+                iou=self.iou,
+                imgsz=(self.imgsz_height, self.imgsz_width),
+                half=self.half,
+                max_det=self.max_det,
+                augment=self.augment,
+                agnostic_nms=self.agnostic_nms,
+                retina_masks=self.retina_masks,
+                device=self.device,
+            )
+            results: Results = results[0].cpu()
 
-        # -----------------------------
-        # 2) YOLO 추론 (self.yolo.predict)
-        # -----------------------------
-        t_infer0 = time.time()
-        results = self.yolo.predict(
-            source=cv_image,
-            verbose=False,
-            stream=False,
-            conf=self.threshold,
-            iou=self.iou,
-            imgsz=(self.imgsz_height, self.imgsz_width),
-            half=self.half,
-            max_det=self.max_det,
-            augment=self.augment,
-            agnostic_nms=self.agnostic_nms,
-            retina_masks=self.retina_masks,
-            device=self.device,
-        )
-        results: Results = results[0].cpu()
-        t_infer1 = time.time()
-        infer_time = (t_infer1 - t_infer0) * 1000.0  # ms
+            if results.boxes or results.obb:
+                hypothesis = self.parse_hypothesis(results)
+                boxes = self.parse_boxes(results)
 
-        # -----------------------------
-        # 3) 후처리 + DetectionArray 생성 + publish
-        # -----------------------------
-        t_post0 = time.time()
+            if results.masks:
+                masks = self.parse_masks(results)
 
-        hypothesis = []
-        boxes = []
-        masks = []
-        keypoints = []
+            if results.keypoints:
+                keypoints = self.parse_keypoints(results)
 
-        if results.boxes or results.obb:
-            hypothesis = self.parse_hypothesis(results)
-            boxes = self.parse_boxes(results)
+            # create detection msgs
+            detections_msg = DetectionArray()
 
-        if results.masks:
-            masks = self.parse_masks(results)
+            for i in range(len(results)):
 
-        if results.keypoints:
-            keypoints = self.parse_keypoints(results)
+                aux_msg = Detection()
 
-        # create detection msgs
-        detections_msg = DetectionArray()
+                if results.boxes or results.obb and hypothesis and boxes:
+                    aux_msg.class_id = hypothesis[i]["class_id"]
+                    aux_msg.class_name = hypothesis[i]["class_name"]
+                    aux_msg.score = hypothesis[i]["score"]
 
-        for i in range(len(results)):
+                    aux_msg.bbox = boxes[i]
 
-            aux_msg = Detection()
+                if results.masks and masks:
+                    aux_msg.mask = masks[i]
 
-            if (results.boxes or results.obb) and hypothesis and boxes:
-                aux_msg.class_id = hypothesis[i]["class_id"]
-                aux_msg.class_name = hypothesis[i]["class_name"]
-                aux_msg.score = hypothesis[i]["score"]
+                if results.keypoints and keypoints:
+                    aux_msg.keypoints = keypoints[i]
 
-                aux_msg.bbox = boxes[i]
+                detections_msg.detections.append(aux_msg)
 
-            if results.masks and masks:
-                aux_msg.mask = masks[i]
+            # publish detections
+            detections_msg.header = msg.header
+            self._pub.publish(detections_msg)
 
-            if results.keypoints and keypoints:
-                aux_msg.keypoints = keypoints[i]
-
-            detections_msg.detections.append(aux_msg)
-
-        # publish detections
-        detections_msg.header = msg.header
-        self._pub.publish(detections_msg)
-
-        # 원래 있던 메모리 정리
-        del results
-        del cv_image
-
-        t_post1 = time.time()
-        post_time = (t_post1 - t_post0) * 1000.0  # ms
-
-        # -----------------------------
-        # 4) 전체 시간 + FPS 계산
-        # -----------------------------
-        t1 = time.time()
-        total_time = (t1 - t0) * 1000.0  # ms
-
-        fps_str = ""
-        if self._last_wall_time is None:
-            self._last_wall_time = t1
-        else:
-            dt = t1 - self._last_wall_time
-            if dt > 0.0:
-                fps = 1.0 / dt
-                fps_str = f" | inst FPS ~ {fps:.2f}"
-            self._last_wall_time = t1
-
-        # -----------------------------
-        # 5) 통계 버퍼 업데이트 + N프레임마다 평균 로그
-        # -----------------------------
-        self._timing_buffer.append((cv_time, infer_time, post_time, total_time))
-
-        if self.debug_timing and (self._frame_count % self.debug_interval == 0):
-            self._log_timing_stats(len(detections_msg.detections), fps_str)
-
-        # 필요하면 매 프레임 로그도 여기서 찍을 수 있음
-        # self.get_logger().info(
-        #     f"[Frame {self._frame_count}] "
-        #     f"cv={cv_time:.1f}ms, infer={infer_time:.1f}ms, "
-        #     f"post={post_time:.1f}ms, total={total_time:.1f}ms "
-        #     f"(dets={len(detections_msg.detections)}){fps_str}"
-        # )
+            del results
+            del cv_image
 
     def set_classes_cb(
         self,
@@ -508,30 +397,6 @@ class YoloNode(LifecycleNode):
         self.yolo.set_classes(req.classes)
         self.get_logger().info(f"New classes: {self.yolo.names}")
         return res
-
-    # -----------------------------
-    # 디버그용 타이밍 통계 로그 함수
-    # -----------------------------
-    def _log_timing_stats(self, num_dets: int, fps_str: str) -> None:
-        if not self._timing_buffer:
-            return
-
-        cv_times, infer_times, post_times, total_times = zip(*self._timing_buffer)
-
-        def avg(xs: Tuple[float, ...]) -> float:
-            return float(sum(xs) / len(xs))
-
-        avg_cv = avg(cv_times)
-        avg_infer = avg(infer_times)
-        avg_post = avg(post_times)
-        avg_total = avg(total_times)
-
-        self.get_logger().info(
-            f"[YOLO Timing (last {len(self._timing_buffer)} frames)] "
-            f"cv={avg_cv:.1f}ms, infer={avg_infer:.1f}ms, "
-            f"post={avg_post:.1f}ms, total={avg_total:.1f}ms, "
-            f"last_frame_dets={num_dets}{fps_str}"
-        )
 
 
 def main():
