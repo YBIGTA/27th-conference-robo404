@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. yolo_ros의 requirements.txt 를 이미지 안으로 복사
-#    => 빌드 컨텍스트에 ros/src/yolo_ros/requirements.txt 가 있어야 함
+#    => 로컬 ./ros/src/yolo_ros/requirements.txt 가 있어야 함
+#    => 없으면 먼저 ./setup_repos.sh 를 실행하세요
 COPY ./ros/src/yolo_ros/requirements.txt /tmp/yolo_requirements.txt
 
 # 4. YOLO 전용 venv 생성 + requirements 설치
@@ -32,9 +33,7 @@ RUN echo 'if [ -f /opt/ros/jazzy/setup.bash ]; then source /opt/ros/jazzy/setup.
     echo 'export PYTHONPATH="/opt/yolo_venv/lib/python3.12/site-packages:$PYTHONPATH"' >> /root/.bashrc && \
     echo 'export TURTLEBOT3_MODEL=waffle' >> /root/.bashrc
 
-# 6. 작업용 워크스페이스 디렉토리 (/root/ros)
-#    실제 코드(ros)는 나중에 -v 로 마운트
-RUN mkdir -p /root/ros/src
+# 6. 작업 디렉토리를 /root/ros 로 변경
 WORKDIR /root/ros
 
 # 7. entrypoint.sh 복사 후 실행 가능하게

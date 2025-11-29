@@ -22,7 +22,16 @@
 </div>
 
 
-## 📦 1. Docker 이미지 빌드
+## 🛠️ 1. Pre-build Setup
+
+First, run the repository setup script to clone required ROS packages:
+
+```bash
+chmod +x setup_repos.sh
+./setup_repos.sh
+```
+
+## 📦 2. Docker 이미지 빌드
 
 ```bash
 docker build -t my-ros-jazzy-dev .
@@ -30,7 +39,7 @@ docker build -t my-ros-jazzy-dev .
 
 ---
 
-## 🚀 2. 컨테이너 실행
+## 🚀 3. 컨테이너 실행
 
 ### GPU 사용(Linux)
 

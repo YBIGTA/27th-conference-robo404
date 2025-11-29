@@ -31,6 +31,7 @@ MANIFEST
 build/
 install/
 log/
+src/
 
 # IDE
 .vscode/
