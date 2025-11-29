@@ -44,3 +44,7 @@ ros/src/external/
 # OS
 .DS_Store
 Thumbs.db
+
+# Windows ADS (Alternate Data Stream) 파일 무시
+# 예: Chair_Diffuse.png:Zone.Identifier
+*?Zone.Identifier

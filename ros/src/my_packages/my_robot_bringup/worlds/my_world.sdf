@@ -39,20 +39,20 @@
         </link>
       </model>
       <model name='Chair'>
-        <pose>1 0.10000000000000001 0 -4.0000000000000032e-06 1.9999999999999999e-06 3.1415000000000002</pose>
+        <pose>1 0.10000000000000001 0 -4.0000000000000049e-06 1.9999999999999999e-06 3.1415000000000002</pose>
         <scale>1 1 1</scale>
         <link name='body'>
-          <pose>1 0.10000000000000001 0 1.9999999999999978e-06 4.0000000000000024e-06 -1.5708800000000009</pose>
+          <pose>1 0.10000000000000001 0 1.9999999999999969e-06 4.0000000000000032e-06 -1.5708800000000014</pose>
           <velocity>0 0 0 0 0 0</velocity>
           <acceleration>0 0 0 0 0 0</acceleration>
           <wrench>0 0 0 0 0 0</wrench>
         </link>
       </model>
       <model name='CoffeeTable'>
-        <pose>0 0.10000000000000001 -0.00012899999999999999 2.0000000000000033e-06 -2.0000000000000016e-06 -2.8272774843177607e-27</pose>
+        <pose>0 0.10000000000000001 -0.00012899999999999999 2.000000000000005e-06 -2.0000000000000025e-06 -4.0389678347396584e-27</pose>
         <scale>1 1 1</scale>
         <link name='body'>
-          <pose>0 0.10000000000000001 -0.00012899999999999999 2.0000000000000033e-06 -2.0000000000000016e-06 -2.8272774843177607e-27</pose>
+          <pose>0 0.10000000000000001 -0.00012899999999999999 2.000000000000005e-06 -2.0000000000000025e-06 -4.0389678347396584e-27</pose>
           <velocity>0 0 0 0 0 0</velocity>
           <acceleration>0 0 0 0 0 0</acceleration>
           <wrench>0 0 0 0 0 0</wrench>
@@ -89,7 +89,7 @@
         </link>
       </model>
       <model name='MiniSofa'>
-        <pose>-1 0.10000000000000001 -0.00089700000000000001 -4.0000000000000032e-06 -1.2e-05 -3.1415000000000002</pose>
+        <pose>-1 0.10000000000000001 -0.00089700000000000001 -4.0000000000000049e-06 -1.2e-05 -3.1415000000000002</pose>
         <scale>1 1 1</scale>
         <link name='body'>
           <pose>-1 0.10000000000000001 -0.00089700000000000001 1.2e-05 -3.9999999999999998e-06 1.5708800000000001</pose>
@@ -268,7 +268,7 @@
     </state>
     <gui fullscreen='false'>
       <camera name='user_camera'>
-        <pose>-1.58866 -7.3818400000000004 7.1969500000000002 -7.0366386019639459e-17 0.66180000000000061 1.0642600000000002</pose>
+        <pose>-1.58866 -7.3818400000000004 7.1969500000000002 7.0366386019639496e-17 0.66180000000000061 1.0642600000000004</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -310,11 +310,7 @@
             </plane>
           </geometry>
           <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
-          </material>
+            <ambient>0.5 0.5 0.5 1</ambient> <diffuse>0.5 0.5 0.5 1</diffuse> <specular>0.1 0.1 0.1 1</specular> </material>
         </visual>
         <self_collide>false</self_collide>
         <enable_wind>false</enable_wind>
@@ -343,14 +339,14 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/sofa/2/files/meshes/Sofa.obj</uri>
+              <uri>model://Sofa/Sofa.obj</uri>
             </mesh>
           </geometry>
         </visual>
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/sofa/2/files/meshes/Sofa.obj</uri>
+              <uri>model://Sofa/Sofa.obj</uri>
             </mesh>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -383,7 +379,7 @@
         <enable_wind>false</enable_wind>
         <kinematic>false</kinematic>
       </link>
-      <pose>-1.28433 1.2043299999999999 0 0 0 2.6645352591003757e-15</pose>
+      <pose>-1.28433 1.2043299999999999 0 0 0 3.8857805861880479e-15</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='CoffeeTable'>
@@ -393,7 +389,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/coffeetable/1/files/meshes/CoffeeTable.obj</uri>
+              <uri>model://CoffeeTable/CoffeeTable.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -401,7 +397,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/coffeetable/1/files/meshes/CoffeeTable.obj</uri>
+              <uri>model://CoffeeTable/CoffeeTable.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -445,7 +441,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/minisofa/2/files/meshes/minisofa.obj</uri>
+              <uri>model://minisofa/minisofa.obj</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -453,7 +449,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/minisofa/2/files/meshes/minisofa.obj</uri>
+              <uri>model://minisofa/minisofa.obj</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -487,7 +483,7 @@
         <enable_wind>false</enable_wind>
         <kinematic>false</kinematic>
       </link>
-      <pose>-0.026160793378949165 2.4164633750915527 0 0 0 1.5700000039780249</pose>
+      <pose>-0.026160793378949165 2.4164633750915527 0 0 0 1.5700000038073603</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='Chair'>
@@ -497,7 +493,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/chair/2/files/meshes/Chair.obj</uri>
+              <uri>model://Chair/Chair.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -505,7 +501,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/chair/2/files/meshes/Chair.obj</uri>
+              <uri>model://Chair/Chair.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -539,7 +535,7 @@
         <enable_wind>false</enable_wind>
         <kinematic>false</kinematic>
       </link>
-      <pose>-0.80956536531448364 -0.82470279932022095 0 0 0 0.4716660116560687</pose>
+      <pose>-0.80956536531448364 -0.82470279932022095 0 0 0 0.47166601165607036</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='Bookshelf'>
@@ -593,7 +589,7 @@
             </script>
             <pbr>
               <metal>
-                <albedo_map>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/bookshelf/3/files/bookshelf_diffuse.jpg</albedo_map>
+                <albedo_map>model://Bookshelf/textures/bookshelf_diffuse.jpg</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -634,7 +630,7 @@
             </script>
             <pbr>
               <metal>
-                <albedo_map>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/bookshelf/3/files/bookshelf_diffuse.jpg</albedo_map>
+                <albedo_map>model://Bookshelf/textures/bookshelf_diffuse.jpg</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -675,7 +671,7 @@
             </script>
             <pbr>
               <metal>
-                <albedo_map>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/bookshelf/3/files/bookshelf_diffuse.jpg</albedo_map>
+                <albedo_map>model://Bookshelf/textures/bookshelf_diffuse.jpg</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -716,7 +712,7 @@
             </script>
             <pbr>
               <metal>
-                <albedo_map>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/bookshelf/3/files/bookshelf_diffuse.jpg</albedo_map>
+                <albedo_map>model://Bookshelf/textures/bookshelf_diffuse.jpg</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -757,7 +753,7 @@
             </script>
             <pbr>
               <metal>
-                <albedo_map>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/bookshelf/3/files/bookshelf_diffuse.jpg</albedo_map>
+                <albedo_map>model://Bookshelf/textures/bookshelf_diffuse.jpg</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -798,7 +794,7 @@
             </script>
             <pbr>
               <metal>
-                <albedo_map>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/bookshelf/3/files/bookshelf_diffuse.jpg</albedo_map>
+                <albedo_map>model://Bookshelf/textures/bookshelf_diffuse.jpg</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -839,7 +835,7 @@
             </script>
             <pbr>
               <metal>
-                <albedo_map>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/bookshelf/3/files/bookshelf_diffuse.jpg</albedo_map>
+                <albedo_map>model://Bookshelf/textures/bookshelf_diffuse.jpg</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -1085,82 +1081,6 @@
       <pose>0.34000000000000002 -1.7 0 -0.010000000000000002 8.6736173798840355e-19 -1.5700000000000001</pose>
       <self_collide>false</self_collide>
     </model>
-    <model name='makerspet_poster'>
-      <link name='link'>
-        <visual name='visual'>
-          <geometry>
-            <box>
-              <size>0.029999999999999999 0.85714000000000001 1</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>https://fuel.ignitionrobotics.org/1.0/makerspet/models/makerspet_poster/1/files/material/script</uri>
-              <uri>https://fuel.ignitionrobotics.org/1.0/makerspet/models/makerspet_poster/1/files/material/textures</uri>
-              <name>Custom/makerspet</name>
-            </script>
-          </material>
-        </visual>
-        <self_collide>false</self_collide>
-        <enable_wind>false</enable_wind>
-        <kinematic>false</kinematic>
-        <pose>0 0 0 0 0 0</pose>
-        <inertial>
-          <pose>0 0 0 0 0 0</pose>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-      </link>
-      <static>true</static>
-      <allow_auto_disable>true</allow_auto_disable>
-      <pose>-1.7985800000000001 1.04969 0 0 0 0</pose>
-      <self_collide>false</self_collide>
-    </model>
-    <model name='kaiaai_poster'>
-      <link name='link'>
-        <visual name='visual'>
-          <geometry>
-            <box>
-              <size>0.029999999999999999 0.97819999999999996 1</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>https://fuel.ignitionrobotics.org/1.0/makerspet/models/kaiaai_poster/1/files/material/script</uri>
-              <uri>https://fuel.ignitionrobotics.org/1.0/makerspet/models/kaiaai_poster/1/files/material/textures</uri>
-              <name>Custom/kaiaai</name>
-            </script>
-          </material>
-        </visual>
-        <self_collide>false</self_collide>
-        <enable_wind>false</enable_wind>
-        <kinematic>false</kinematic>
-        <pose>0 0 0 0 0 0</pose>
-        <inertial>
-          <pose>0 0 0 0 0 0</pose>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-      </link>
-      <static>true</static>
-      <allow_auto_disable>true</allow_auto_disable>
-      <pose>-2.09205 -0.074601000000000001 0 0 0 0</pose>
-      <self_collide>false</self_collide>
-    </model>
     <model name='LampAndStand'>
       <static>true</static>
       <link name='body'>
@@ -1168,14 +1088,14 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/lampandstand/2/files/meshes/LampAndStand.obj</uri>
+              <uri>model://LampAndStand/LampAndStand.obj</uri>
             </mesh>
           </geometry>
         </visual>
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/lampandstand/2/files/meshes/LampAndStand_Col.obj</uri>
+              <uri>model://LampAndStand/LampAndStand_Col.obj</uri>
             </mesh>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -1220,10 +1140,9 @@
             </box>
           </geometry>
           <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/White</name>
-            </script>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>0.100000001 0.100000001 0.100000001 1</specular>
           </material>
         </visual>
         <collision name='collision'>
@@ -1439,45 +1358,8 @@
       <pose>2.8172000000000001 0.54092700000000005 0 0 0 0</pose>
       <self_collide>false</self_collide>
     </model>
-    <model name='rug_ivory_2m_0'>
-      <link name='link'>
-        <visual name='visual'>
-          <geometry>
-            <box>
-              <size>1.6000000000000001 2 0.0050000000000000001</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Gray</name>
-            </script>
-          </material>
-        </visual>
-        <self_collide>false</self_collide>
-        <enable_wind>false</enable_wind>
-        <kinematic>false</kinematic>
-        <pose>0 0 0 0 0 0</pose>
-        <inertial>
-          <pose>0 0 0 0 0 0</pose>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-      </link>
-      <static>true</static>
-      <allow_auto_disable>true</allow_auto_disable>
-      <pose>-0.055643618106842041 0.96956402063369751 0 0 0 0</pose>
-      <self_collide>false</self_collide>
-    </model>
     <model name='red_ball_10in'>
-      <pose>1.551800012588501 1.74168860912323 0.12699943776435124 0 0 0</pose>
+      <pose>1.551800012588501 1.74168860912323 0.12699944328865176 0 0 0</pose>
       <link name='link'>
         <inertial>
           <mass>0.21299999999999999</mass>
@@ -1498,10 +1380,9 @@
             </sphere>
           </geometry>
           <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Red</name>
-            </script>
+            <ambient>0.800000012 0.100000001 0.100000001 1</ambient>
+            <diffuse>0.800000012 0.100000001 0.100000001 1</diffuse>
+            <specular>0.100000001 0.100000001 0.100000001 1</specular>
           </material>
         </visual>
         <collision name='collision'>
@@ -1535,6 +1416,524 @@
         <kinematic>false</kinematic>
         <pose>0 0 0 0 0 0</pose>
       </link>
+      <static>false</static>
+      <self_collide>false</self_collide>
+    </model>
+    <model name='waffle'>
+      <model name='turtlebot3_waffle'>
+        <pose>0 0 0 0 0 0</pose>
+        <link name='base_footprint'/>
+        <link name='base_link'>
+          <inertial>
+            <pose>-0.064000000000000001 0 0.048000000000000001 0 0 0</pose>
+            <inertia>
+              <ixx>0.042111447000000003</ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>0.042111447000000003</iyy>
+              <iyz>0</iyz>
+              <izz>0.075254873999999999</izz>
+            </inertia>
+            <mass>1.3729096000000001</mass>
+          </inertial>
+          <collision name='base_collision'>
+            <pose>-0.064000000000000001 0 0.048000000000000001 0 0 0</pose>
+            <geometry>
+              <box>
+                <size>0.26500000000000001 0.26500000000000001 0.088999999999999996</size>
+              </box>
+            </geometry>
+            <surface>
+              <friction>
+                <ode/>
+              </friction>
+              <bounce/>
+              <contact/>
+            </surface>
+          </collision>
+          <visual name='base_visual'>
+            <pose>-0.064000000000000001 0 0 0 0 0</pose>
+            <geometry>
+              <mesh>
+                <uri>model://turtlebot3_common/meshes/bases/waffle_base.stl</uri>
+                <scale>0.001 0.001 0.001</scale>
+              </mesh>
+            </geometry>
+            <material>
+              <ambient>0.300000012 0.300000012 0.300000012 1</ambient>
+              <diffuse>0.300000012 0.300000012 0.300000012 1</diffuse>
+            </material>
+          </visual>
+        </link>
+        <link name='imu_link'>
+          <sensor name='tb3_imu' type='imu'>
+            <always_on>true</always_on>
+            <update_rate>200</update_rate>
+            <topic>imu</topic>
+            <imu>
+              <angular_velocity>
+                <x>
+                  <noise type='gaussian'>
+                    <mean>0</mean>
+                    <stddev>0.00020000000000000001</stddev>
+                  </noise>
+                </x>
+                <y>
+                  <noise type='gaussian'>
+                    <mean>0</mean>
+                    <stddev>0.00020000000000000001</stddev>
+                  </noise>
+                </y>
+                <z>
+                  <noise type='gaussian'>
+                    <mean>0</mean>
+                    <stddev>0.00020000000000000001</stddev>
+                  </noise>
+                </z>
+              </angular_velocity>
+              <linear_acceleration>
+                <x>
+                  <noise type='gaussian'>
+                    <mean>0</mean>
+                    <stddev>0.017000000000000001</stddev>
+                  </noise>
+                </x>
+                <y>
+                  <noise type='gaussian'>
+                    <mean>0</mean>
+                    <stddev>0.017000000000000001</stddev>
+                  </noise>
+                </y>
+                <z>
+                  <noise type='gaussian'>
+                    <mean>0</mean>
+                    <stddev>0.017000000000000001</stddev>
+                  </noise>
+                </z>
+              </linear_acceleration>
+            </imu>
+          </sensor>
+        </link>
+        <link name='base_scan'>
+          <inertial>
+            <pose>-0.051999999999999998 0 0.111 0 0 0</pose>
+            <inertia>
+              <ixx>0.001</ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>0.001</iyy>
+              <iyz>0</iyz>
+              <izz>0.001</izz>
+            </inertia>
+            <mass>0.114</mass>
+          </inertial>
+          <collision name='lidar_sensor_collision'>
+            <pose>-0.051999999999999998 0 0.111 0 0 0</pose>
+            <geometry>
+              <cylinder>
+                <radius>0.050799999999999998</radius>
+                <length>0.055</length>
+              </cylinder>
+            </geometry>
+            <surface>
+              <friction>
+                <ode/>
+              </friction>
+              <bounce/>
+              <contact/>
+            </surface>
+          </collision>
+          <visual name='lidar_sensor_visual'>
+            <pose>-0.064000000000000001 0 0.121 0 0 0</pose>
+            <geometry>
+              <mesh>
+                <uri>model://turtlebot3_common/meshes/sensors/lds.stl</uri>
+                <scale>0.001 0.001 0.001</scale>
+              </mesh>
+            </geometry>
+            <material>
+              <ambient>0.200000003 0.200000003 0.200000003 1</ambient>
+              <diffuse>0.200000003 0.200000003 0.200000003 1</diffuse>
+            </material>
+          </visual>
+          <sensor name='hls_lfcd_lds' type='gpu_lidar'>
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <pose>-0.064000000000000001 0 0.121 0 0 0</pose>
+            <update_rate>10</update_rate>
+            <topic>scan</topic>
+            <lidar>
+              <scan>
+                <horizontal>
+                  <samples>360</samples>
+                  <resolution>1</resolution>
+                  <min_angle>0</min_angle>
+                  <max_angle>6.2800000000000002</max_angle>
+                </horizontal>
+              </scan>
+              <range>
+                <min>0.12</min>
+                <max>3.5</max>
+                <resolution>0.014999999999999999</resolution>
+              </range>
+              <noise>
+                <type>gaussian</type>
+                <mean>0</mean>
+                <stddev>0.01</stddev>
+              </noise>
+            </lidar>
+            <gz_frame_id>base_scan</gz_frame_id>
+          </sensor>
+        </link>
+        <link name='wheel_left_link'>
+          <inertial>
+            <pose>0 0.14399999999999999 0.023 -1.5700000000000001 0 0</pose>
+            <inertia>
+              <ixx>1.117558e-05</ixx>
+              <ixy>-4.2369783000000002e-11</ixy>
+              <ixz>-5.9381719000000002e-09</ixz>
+              <iyy>1.1192413e-05</iyy>
+              <iyz>-1.4400107e-11</iyz>
+              <izz>2.0712558000000001e-05</izz>
+            </inertia>
+            <mass>0.10000000000000001</mass>
+          </inertial>
+          <collision name='wheel_left_collision'>
+            <pose>0 0.14399999999999999 0.023 -1.5700000000000001 0 0</pose>
+            <geometry>
+              <cylinder>
+                <radius>0.033000000000000002</radius>
+                <length>0.017999999999999999</length>
+              </cylinder>
+            </geometry>
+            <surface>
+              <friction>
+                <ode>
+                  <mu>100000</mu>
+                  <mu2>100000</mu2>
+                  <fdir1>0 0 0</fdir1>
+                  <slip1>0</slip1>
+                  <slip2>0</slip2>
+                </ode>
+              </friction>
+              <contact>
+                <ode>
+                  <soft_cfm>0</soft_cfm>
+                  <soft_erp>0.20000000000000001</soft_erp>
+                  <kp>100000</kp>
+                  <kd>1</kd>
+                  <max_vel>0.01</max_vel>
+                  <min_depth>0.001</min_depth>
+                </ode>
+              </contact>
+              <bounce/>
+            </surface>
+          </collision>
+          <visual name='wheel_left_visual'>
+            <pose>0 0.14399999999999999 0.023 0 0 0</pose>
+            <geometry>
+              <mesh>
+                <uri>model://turtlebot3_common/meshes/wheels/left_tire.stl</uri>
+                <scale>0.001 0.001 0.001</scale>
+              </mesh>
+            </geometry>
+            <material>
+              <ambient>0.200000003 0.200000003 0.200000003 1</ambient>
+              <diffuse>0.200000003 0.200000003 0.200000003 1</diffuse>
+            </material>
+          </visual>
+        </link>
+        <link name='wheel_right_link'>
+          <inertial>
+            <pose>0 -0.14399999999999999 0.023 -1.5700000000000001 0 0</pose>
+            <inertia>
+              <ixx>1.117558e-05</ixx>
+              <ixy>-4.2369783000000002e-11</ixy>
+              <ixz>-5.9381719000000002e-09</ixz>
+              <iyy>1.1192413e-05</iyy>
+              <iyz>-1.4400107e-11</iyz>
+              <izz>2.0712558000000001e-05</izz>
+            </inertia>
+            <mass>0.10000000000000001</mass>
+          </inertial>
+          <collision name='wheel_right_collision'>
+            <pose>0 -0.14399999999999999 0.023 -1.5700000000000001 0 0</pose>
+            <geometry>
+              <cylinder>
+                <radius>0.033000000000000002</radius>
+                <length>0.017999999999999999</length>
+              </cylinder>
+            </geometry>
+            <surface>
+              <friction>
+                <ode>
+                  <mu>100000</mu>
+                  <mu2>100000</mu2>
+                  <fdir1>0 0 0</fdir1>
+                  <slip1>0</slip1>
+                  <slip2>0</slip2>
+                </ode>
+              </friction>
+              <contact>
+                <ode>
+                  <soft_cfm>0</soft_cfm>
+                  <soft_erp>0.20000000000000001</soft_erp>
+                  <kp>100000</kp>
+                  <kd>1</kd>
+                  <max_vel>0.01</max_vel>
+                  <min_depth>0.001</min_depth>
+                </ode>
+              </contact>
+              <bounce/>
+            </surface>
+          </collision>
+          <visual name='wheel_right_visual'>
+            <pose>0 -0.14399999999999999 0.023 0 0 0</pose>
+            <geometry>
+              <mesh>
+                <uri>model://turtlebot3_common/meshes/wheels/right_tire.stl</uri>
+                <scale>0.001 0.001 0.001</scale>
+              </mesh>
+            </geometry>
+            <material>
+              <ambient>0.200000003 0.200000003 0.200000003 1</ambient>
+              <diffuse>0.200000003 0.200000003 0.200000003 1</diffuse>
+            </material>
+          </visual>
+        </link>
+        <link name='caster_back_right_link'>
+          <pose>-0.17699999999999999 -0.064000000000000001 -0.0040000000000000001 -1.5700000000000001 0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.0000000000000001e-05</ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>1.0000000000000001e-05</iyy>
+              <iyz>0</iyz>
+              <izz>1.0000000000000001e-05</izz>
+            </inertia>
+          </inertial>
+          <collision name='collision'>
+            <geometry>
+              <sphere>
+                <radius>0.0050000000000000001</radius>
+              </sphere>
+            </geometry>
+            <surface>
+              <contact>
+                <ode>
+                  <soft_cfm>0</soft_cfm>
+                  <soft_erp>0.20000000000000001</soft_erp>
+                  <kp>100000</kp>
+                  <kd>1</kd>
+                  <max_vel>0.01</max_vel>
+                  <min_depth>0.001</min_depth>
+                </ode>
+              </contact>
+              <friction>
+                <ode/>
+              </friction>
+              <bounce/>
+            </surface>
+          </collision>
+        </link>
+        <link name='caster_back_left_link'>
+          <pose>-0.17699999999999999 0.064000000000000001 -0.0040000000000000001 -1.5700000000000001 0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.0000000000000001e-05</ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>1.0000000000000001e-05</iyy>
+              <iyz>0</iyz>
+              <izz>1.0000000000000001e-05</izz>
+            </inertia>
+          </inertial>
+          <collision name='collision'>
+            <geometry>
+              <sphere>
+                <radius>0.0050000000000000001</radius>
+              </sphere>
+            </geometry>
+            <surface>
+              <contact>
+                <ode>
+                  <soft_cfm>0</soft_cfm>
+                  <soft_erp>0.20000000000000001</soft_erp>
+                  <kp>100000</kp>
+                  <kd>1</kd>
+                  <max_vel>0.01</max_vel>
+                  <min_depth>0.001</min_depth>
+                </ode>
+              </contact>
+              <friction>
+                <ode/>
+              </friction>
+              <bounce/>
+            </surface>
+          </collision>
+        </link>
+        <link name='camera_link'/>
+        <link name='camera_rgb_frame'>
+          <inertial>
+            <pose>0.069000000000000006 -0.047 0.107 0 0 0</pose>
+            <inertia>
+              <ixx>0.001</ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>0.001</iyy>
+              <iyz>0</iyz>
+              <izz>0.001</izz>
+            </inertia>
+            <mass>0.035000000000000003</mass>
+          </inertial>
+          <pose>0.069000000000000006 -0.047 0.107 0 0 0</pose>
+          <sensor name='camera' type='camera'>
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <update_rate>30</update_rate>
+            <topic>camera/image_raw</topic>
+            <camera name='intel_realsense_r200'>
+              <camera_info_topic>camera/camera_info</camera_info_topic>
+              <horizontal_fov>1.0297400000000001</horizontal_fov>
+              <image>
+                <width>1920</width>
+                <height>1080</height>
+                <format>R8G8B8</format>
+              </image>
+              <clip>
+                <near>0.02</near>
+                <far>300</far>
+              </clip>
+              <noise>
+                <type>gaussian</type>
+                <mean>0</mean>
+                <stddev>0.0070000000000000001</stddev>
+              </noise>
+            </camera>
+            <gz_frame_id>camera_rgb_frame</gz_frame_id>
+          </sensor>
+        </link>
+        <joint name='base_joint' type='fixed'>
+          <parent>base_footprint</parent>
+          <child>base_link</child>
+          <pose>0 0 0.01 0 0 0</pose>
+        </joint>
+        <joint name='wheel_left_joint' type='revolute'>
+          <parent>base_link</parent>
+          <child>wheel_left_link</child>
+          <pose>0 0.14399999999999999 0.023 -1.5700000000000001 0 0</pose>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <effort>20</effort>
+              <lower>-inf</lower>
+              <upper>inf</upper>
+            </limit>
+          </axis>
+        </joint>
+        <joint name='wheel_right_joint' type='revolute'>
+          <parent>base_link</parent>
+          <child>wheel_right_link</child>
+          <pose>0 -0.14399999999999999 0.023 -1.5700000000000001 0 0</pose>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <effort>20</effort>
+              <lower>-inf</lower>
+              <upper>inf</upper>
+            </limit>
+          </axis>
+        </joint>
+        <joint name='caster_back_right_joint' type='ball'>
+          <parent>base_link</parent>
+          <child>caster_back_right_link</child>
+        </joint>
+        <joint name='caster_back_left_joint' type='ball'>
+          <parent>base_link</parent>
+          <child>caster_back_left_link</child>
+        </joint>
+        <joint name='imu_joint' type='fixed'>
+          <parent>base_link</parent>
+          <child>imu_link</child>
+          <pose>-0.032000000000000001 0 0.068000000000000005 0 0 0</pose>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>-inf</lower>
+              <upper>inf</upper>
+            </limit>
+          </axis>
+        </joint>
+        <joint name='lidar_joint' type='fixed'>
+          <parent>base_link</parent>
+          <child>base_scan</child>
+          <pose>-0.064000000000000001 0 0.121 0 0 0</pose>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>-inf</lower>
+              <upper>inf</upper>
+            </limit>
+          </axis>
+        </joint>
+        <joint name='camera_joint' type='fixed'>
+          <parent>base_link</parent>
+          <child>camera_link</child>
+          <pose>0.064000000000000001 -0.065000000000000002 0.094 0 0 0</pose>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>-inf</lower>
+              <upper>inf</upper>
+            </limit>
+          </axis>
+        </joint>
+        <joint name='camera_rgb_joint' type='fixed'>
+          <parent>camera_link</parent>
+          <child>camera_rgb_frame</child>
+          <pose>0.0050000000000000001 0.017999999999999999 0.012999999999999999 0 0 0</pose>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>-inf</lower>
+              <upper>inf</upper>
+            </limit>
+          </axis>
+        </joint>
+        <plugin name='gz::sim::systems::DiffDrive' filename='gz-sim-diff-drive-system'>
+          <left_joint>wheel_left_joint</left_joint>
+          <right_joint>wheel_right_joint</right_joint>
+          <wheel_separation>0.287</wheel_separation>
+          <wheel_radius>0.033</wheel_radius>
+          <max_linear_acceleration>1.0</max_linear_acceleration>
+          <topic>cmd_vel</topic>
+          <odom_topic>odom</odom_topic>
+          <frame_id>odom</frame_id>
+          <child_frame_id>base_footprint</child_frame_id>
+          <odom_publisher_frequency>30</odom_publisher_frequency>
+          <tf_topic>/tf</tf_topic>
+        </plugin>
+        <plugin name='gz::sim::systems::JointStatePublisher' filename='gz-sim-joint-state-publisher-system'>
+          <topic>joint_states</topic>
+          <joint_name>wheel_left_joint</joint_name>
+          <joint_name>wheel_right_joint</joint_name>
+        </plugin>
+      </model>
+      <plugin name='ignition::gazebo::systems::DiffDrive' filename='ignition-gazebo-diff-drive-system'>
+        <left_joint>wheel_left_joint</left_joint>
+        <right_joint>wheel_right_joint</right_joint>
+        <wheel_separation>0.287</wheel_separation>
+        <wheel_radius>0.033</wheel_radius>
+        <topic>/cmd_vel</topic>
+        <odom_publish_frequency>30</odom_publish_frequency>
+      </plugin>
+      <plugin name='ignition::gazebo::systems::Sensors' filename='ignition-gazebo-sensors-system'>
+        <render_engine>ogre2</render_engine>
+      </plugin>
+      <pose>-5.6923903205895367e-05 1.3587487749617594e-11 0.010007388801831227 -1.3980878321513042e-09 -0.0056918620854803205 -1.5568701576951078e-08</pose>
       <static>false</static>
       <self_collide>false</self_collide>
     </model>
