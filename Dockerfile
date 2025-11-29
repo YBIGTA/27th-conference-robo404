@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 # 3. yolo_ros의 requirements.txt 를 이미지 안으로 복사
 #    => 로컬 ./ros/src/yolo_ros/requirements.txt 가 있어야 함
 #    => 없으면 먼저 ./setup_repos.sh 를 실행하세요
-COPY ./ros/src/yolo_ros/requirements.txt /tmp/yolo_requirements.txt
+COPY ./ros/src/external/yolo_ros/requirements.txt /tmp/yolo_requirements.txt
 
 # 4. YOLO 전용 venv 생성 + requirements 설치
 #    venv는 /opt/yolo_venv 에 둬서 워크스페이스(ros)와 분리
