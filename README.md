@@ -74,11 +74,20 @@ docker run -it --rm \
 ## 📂 3. ROS 패키지 구조 (필수)
 
 ```
-ros/
- └── src/
-      ├── turtlebot3_msgs
-      ├── turtlebot3_simulations
-      └── yolo_ros
+27th-conference-robo404/
+└─ros/
+    └─src/
+        ├─external/ # 외부 패키지
+        │  ├─turtlebot3_msgs/
+        │  ├─turtlebot3_simulations/
+        │  └─yolo_ros/
+        └─my_packages/
+            ├─my_robot_bringup/ # 로봇 실행 및 통합 설정 패키지
+            │   ├─launch/
+            │   ├─maps/
+            │   ├─worlds/
+            │   └─...
+            └─ # yolo 관련 커스텀 패키지 폴더 등...
 ```
 
 ---
