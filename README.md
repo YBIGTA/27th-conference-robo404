@@ -74,11 +74,16 @@ docker run -it --rm \
 ## 📂 3. ROS 패키지 구조 (필수)
 
 ```
-ros/
- └── src/
-      ├── turtlebot3_msgs
-      ├── turtlebot3_simulations
-      └── yolo_ros
+27th-conference-robo404/
+└─ros/
+    └─src/
+        ├─external/ # 외부 패키지
+        │  ├─turtlebot3_msgs/
+        │  ├─turtlebot3_simulations/
+        │  └─yolo_ros/
+        └─my_packages/
+            ├─my_robot_bringup/ # 로봇 실행 및 통합 설정 패키지
+            └─ # yolo 관련 커스텀 패키지 폴더 등...
 ```
 
 ---
@@ -89,14 +94,14 @@ ros/
 
 ```bash
 docker exec -it ros-dev bash
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+ros2 launch my_robot_bringup my_launch.py
 ```
 
 ### 2. Nav2
 
 ```bash
 docker exec -it ros-dev bash
-ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=/root/ros/src/my_packages/my_robot_bringup/maps/my_map.yaml
 ```
 
 ### 3. YOLOv8 노드

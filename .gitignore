@@ -28,10 +28,12 @@ MANIFEST
 *.pth
 
 # ROS build directories
-build/
-install/
-log/
-src/
+ros/build/
+ros/install/
+ros/log/
+
+# external packages
+ros/src/external/
 
 # IDE
 .vscode/

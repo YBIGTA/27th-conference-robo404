@@ -5,13 +5,15 @@
 
 # Get current directory and append /ros/src
 CURRENT_DIR=$(pwd)
-ROS_SRC_DIR="$CURRENT_DIR/ros/src"
+EXTERNAL_SRC_DIR="$CURRENT_DIR/ros/src/external"
+MY_PKG_DIR="$CURRENT_DIR/ros/src/my_packages"
 
 echo "Setting up ROS repositories in $ROS_SRC_DIR..."
 
 # Create src directory if it doesn't exist
-mkdir -p "$ROS_SRC_DIR"
-cd "$ROS_SRC_DIR"
+mkdir -p "$EXTERNAL_SRC_DIR"
+mkdir -p "$MY_PKG_DIR"
+cd "$EXTERNAL_SRC_DIR"
 
 # Check and clone turtlebot3_simulations
 if [ ! -d "turtlebot3_simulations" ]; then
