@@ -94,14 +94,14 @@ docker run -it --rm \
 
 ```bash
 docker exec -it ros-dev bash
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+ros2 launch my_robot_bringup my_launch.py
 ```
 
 ### 2. Nav2
 
 ```bash
 docker exec -it ros-dev bash
-ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=/root/ros/src/my_packages/my_robot_bringup/maps/my_map.yaml
 ```
 
 ### 3. YOLOv8 노드

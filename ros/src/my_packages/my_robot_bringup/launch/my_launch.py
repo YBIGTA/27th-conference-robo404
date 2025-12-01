@@ -6,17 +6,20 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    world_file = '/root/ros/my_world_v4.sdf'
-
+    pkg_my_robot_bringup = get_package_share_directory('my_robot_bringup')
+    world_file = os.path.join(pkg_my_robot_bringup, 'worlds', 'my_world.sdf')
+    
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
     pkg_turtlebot3_gazebo = get_package_share_directory('turtlebot3_gazebo')
 
     models_path = os.path.join(pkg_turtlebot3_gazebo, 'models')
     share_path = os.path.dirname(pkg_turtlebot3_gazebo)
+    
+    my_models_path = os.path.join(pkg_my_robot_bringup, 'models')
 
     gz_resource_path = AppendEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
-        value=f"{models_path}:{share_path}"
+        value=f"{models_path}:{share_path}:{my_models_path}"
     )
     
     gz_plugin_path = AppendEnvironmentVariable(
