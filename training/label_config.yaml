@@ -24,6 +24,7 @@ targets:
     class_name: red_ball          # Human-readable name
     geometry_type: sphere         # sphere, box, cylinder
     size: [0.127]                 # [radius] for sphere (in meters)
+    static_pose: [1.55, 1.74, 0.127]  # [x, y, z] world position from SDF
 
 # Example: Adding more objects later
 # Uncomment and modify as needed:

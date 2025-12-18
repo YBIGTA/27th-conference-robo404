@@ -19,7 +19,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import rclpy
 from rclpy.node import Node
@@ -40,6 +40,7 @@ class TargetObject:
     class_name: str
     geometry_type: str  # sphere, box, cylinder
     size: List[float]   # [radius] for sphere, [x,y,z] for box, [radius, height] for cylinder
+    static_pose: Optional[List[float]] = None  # [x, y, z] world position (for static objects)
 
 
 @dataclass
@@ -79,17 +80,17 @@ class AutoLabeler(Node):
         (self.output_dir / "images" / "train").mkdir(parents=True, exist_ok=True)
         (self.output_dir / "labels" / "train").mkdir(parents=True, exist_ok=True)
 
-        # Load config
-        self.targets = self._load_config(config_path)
-        self.get_logger().info(f"Loaded {len(self.targets)} target objects: {list(self.targets.keys())}")
-
         # Camera parameters (will be updated from CameraInfo)
         self.camera_matrix = None
         self.img_width = 1920
         self.img_height = 1080
 
-        # Model positions from Gazebo (world frame)
-        self.model_poses: Dict[str, Pose] = {}
+        # Model positions (world frame) - initialized before _load_config
+        self.model_poses: Dict[str, Union[List[float], Pose]] = {}
+
+        # Load config (may populate model_poses with static positions)
+        self.targets = self._load_config(config_path)
+        self.get_logger().info(f"Loaded {len(self.targets)} target objects: {list(self.targets.keys())}")
 
         # Robot pose (for coordinate transformation)
         self.robot_pose: Optional[Pose] = None
@@ -174,8 +175,15 @@ class AutoLabeler(Node):
                 class_id=obj['class_id'],
                 class_name=obj['class_name'],
                 geometry_type=obj['geometry_type'],
-                size=obj['size']
+                size=obj['size'],
+                static_pose=obj.get('static_pose')
             )
+
+        # Initialize model_poses from static_pose config
+        for name, target in targets.items():
+            if target.static_pose:
+                self.model_poses[name] = target.static_pose
+                self.get_logger().info(f"Loaded static pose for {name}: {target.static_pose}")
 
         return targets
 
@@ -210,12 +218,32 @@ class AutoLabeler(Node):
         # Camera matrix K: [fx, 0, cx, 0, fy, cy, 0, 0, 1]
         self.camera_matrix = np.array(msg.k).reshape(3, 3)
 
+    def _update_robot_pose_from_tf(self):
+        """Get robot pose from TF (odom -> base_footprint)"""
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                'odom',
+                'base_footprint',
+                rclpy.time.Time(),
+                timeout=rclpy.duration.Duration(seconds=0.1)
+            )
+            self.robot_pose = Pose()
+            self.robot_pose.position.x = transform.transform.translation.x
+            self.robot_pose.position.y = transform.transform.translation.y
+            self.robot_pose.position.z = transform.transform.translation.z
+            self.robot_pose.orientation = transform.transform.rotation
+            return True
+        except Exception as e:
+            self.get_logger().debug(f"TF lookup failed: {e}")
+            return False
+
     def image_callback(self, msg: Image):
         """Process camera image and generate labels"""
         if self.camera_matrix is None:
             return
 
-        if self.robot_pose is None:
+        # Get robot pose from TF
+        if not self._update_robot_pose_from_tf():
             return
 
         current_time = self.get_clock().now()
@@ -263,12 +291,15 @@ class AutoLabeler(Node):
             model_pose = self.model_poses[model_name]
 
             # Transform object position to robot-relative coordinates
-            # Object position in world frame
-            obj_world = np.array([
-                model_pose.position.x,
-                model_pose.position.y,
-                model_pose.position.z
-            ])
+            # Object position in world frame (can be list [x,y,z] or Pose)
+            if isinstance(model_pose, list):
+                obj_world = np.array(model_pose)
+            else:
+                obj_world = np.array([
+                    model_pose.position.x,
+                    model_pose.position.y,
+                    model_pose.position.z
+                ])
 
             # Robot position in world frame
             robot_world = np.array([

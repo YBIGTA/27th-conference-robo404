@@ -75,6 +75,16 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--exist-ok", action="store_true", help="Overwrite existing project/name")
 
+    # Augmentation options
+    parser.add_argument("--hsv_h", type=float, default=0.015, help="HSV-Hue augmentation")
+    parser.add_argument("--hsv_s", type=float, default=0.7, help="HSV-Saturation augmentation")
+    parser.add_argument("--hsv_v", type=float, default=0.4, help="HSV-Value augmentation")
+    parser.add_argument("--degrees", type=float, default=0.0, help="Rotation augmentation (degrees)")
+    parser.add_argument("--translate", type=float, default=0.1, help="Translation augmentation")
+    parser.add_argument("--scale", type=float, default=0.5, help="Scale augmentation")
+    parser.add_argument("--fliplr", type=float, default=0.5, help="Horizontal flip probability")
+    parser.add_argument("--mosaic", type=float, default=1.0, help="Mosaic augmentation probability")
+
     return parser.parse_args()
 
 
@@ -131,6 +141,15 @@ def main():
         exist_ok=args.exist_ok,
         verbose=True,
         plots=True,
+        # Augmentation
+        hsv_h=args.hsv_h,
+        hsv_s=args.hsv_s,
+        hsv_v=args.hsv_v,
+        degrees=args.degrees,
+        translate=args.translate,
+        scale=args.scale,
+        fliplr=args.fliplr,
+        mosaic=args.mosaic,
     )
 
     print(f"\n{'='*50}")
