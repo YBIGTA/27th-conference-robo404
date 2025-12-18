@@ -26,17 +26,10 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 
 from sensor_msgs.msg import Image, CameraInfo
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, TransformStamped
+from tf2_msgs.msg import TFMessage
 from tf2_ros import Buffer, TransformListener
 from cv_bridge import CvBridge
-
-try:
-    from gz.msgs10.pose_v_pb2 import Pose_V
-    from gz.transport13 import Node as GzNode
-    GZ_TRANSPORT_AVAILABLE = True
-except ImportError:
-    GZ_TRANSPORT_AVAILABLE = False
-    print("Warning: gz-transport not available. Using TF-based position tracking.")
 
 
 @dataclass
@@ -88,15 +81,18 @@ class AutoLabeler(Node):
 
         # Load config
         self.targets = self._load_config(config_path)
-        self.get_logger().info(f"Loaded {len(self.targets)} target objects")
+        self.get_logger().info(f"Loaded {len(self.targets)} target objects: {list(self.targets.keys())}")
 
         # Camera parameters (will be updated from CameraInfo)
         self.camera_matrix = None
         self.img_width = 1920
         self.img_height = 1080
 
-        # Model positions from Gazebo
+        # Model positions from Gazebo (world frame)
         self.model_poses: Dict[str, Pose] = {}
+
+        # Robot pose (for coordinate transformation)
+        self.robot_pose: Optional[Pose] = None
 
         # TF for camera pose
         self.tf_buffer = Buffer()
@@ -107,6 +103,13 @@ class AutoLabeler(Node):
             reliability=ReliabilityPolicy.BEST_EFFORT,
             history=HistoryPolicy.KEEP_LAST,
             depth=1
+        )
+
+        # QoS for pose topic (reliable)
+        pose_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10
         )
 
         # Subscribers
@@ -124,10 +127,14 @@ class AutoLabeler(Node):
             sensor_qos
         )
 
-        # Gazebo transport for model poses
-        self.gz_node = None
-        if GZ_TRANSPORT_AVAILABLE:
-            self._setup_gz_transport()
+        # Subscribe to Gazebo model poses via ROS2 bridge
+        self.pose_sub = self.create_subscription(
+            TFMessage,
+            f'/world/{self.world_name}/pose/info',
+            self.pose_callback,
+            pose_qos
+        )
+        self.get_logger().info(f"Subscribed to pose topic: /world/{self.world_name}/pose/info")
 
         # Capture control
         self.capture_enabled = False
@@ -140,7 +147,6 @@ class AutoLabeler(Node):
 
         self.get_logger().info("Auto Labeler initialized")
         self.get_logger().info(f"Output directory: {self.output_dir}")
-        self.get_logger().info("Press 's' to start/stop capture, 'c' for single capture")
 
     def _load_config(self, config_path: str) -> Dict[str, TargetObject]:
         """Load target objects from config file"""
@@ -173,31 +179,28 @@ class AutoLabeler(Node):
 
         return targets
 
-    def _setup_gz_transport(self):
-        """Setup Gazebo transport for model poses"""
-        try:
-            self.gz_node = GzNode()
-            topic = f"/world/{self.world_name}/pose/info"
-            self.gz_node.subscribe(Pose_V, topic, self.gz_pose_callback)
-            self.get_logger().info(f"Subscribed to Gazebo pose topic: {topic}")
-        except Exception as e:
-            self.get_logger().error(f"Failed to setup Gazebo transport: {e}")
-            self.gz_node = None
+    def pose_callback(self, msg: TFMessage):
+        """Callback for Gazebo model poses via ROS2 bridge"""
+        for transform in msg.transforms:
+            # child_frame_id contains the model name
+            model_name = transform.child_frame_id
 
-    def gz_pose_callback(self, msg: 'Pose_V'):
-        """Callback for Gazebo model poses"""
-        for pose in msg.pose:
-            model_name = pose.name
+            # Store robot pose for coordinate transformation
+            if model_name == "waffle" or model_name == "turtlebot3_waffle" or "waffle" in model_name.lower():
+                self.robot_pose = Pose()
+                self.robot_pose.position.x = transform.transform.translation.x
+                self.robot_pose.position.y = transform.transform.translation.y
+                self.robot_pose.position.z = transform.transform.translation.z
+                self.robot_pose.orientation = transform.transform.rotation
+
+            # Check if this is a target object
             if model_name in self.targets:
-                ros_pose = Pose()
-                ros_pose.position.x = pose.position.x
-                ros_pose.position.y = pose.position.y
-                ros_pose.position.z = pose.position.z
-                ros_pose.orientation.x = pose.orientation.x
-                ros_pose.orientation.y = pose.orientation.y
-                ros_pose.orientation.z = pose.orientation.z
-                ros_pose.orientation.w = pose.orientation.w
-                self.model_poses[model_name] = ros_pose
+                pose = Pose()
+                pose.position.x = transform.transform.translation.x
+                pose.position.y = transform.transform.translation.y
+                pose.position.z = transform.transform.translation.z
+                pose.orientation = transform.transform.rotation
+                self.model_poses[model_name] = pose
 
     def camera_info_callback(self, msg: CameraInfo):
         """Update camera intrinsic parameters"""
@@ -210,6 +213,9 @@ class AutoLabeler(Node):
     def image_callback(self, msg: Image):
         """Process camera image and generate labels"""
         if self.camera_matrix is None:
+            return
+
+        if self.robot_pose is None:
             return
 
         current_time = self.get_clock().now()
@@ -229,19 +235,8 @@ class AutoLabeler(Node):
             self.get_logger().error(f"Failed to convert image: {e}")
             return
 
-        # Get camera transform
-        try:
-            camera_transform = self.tf_buffer.lookup_transform(
-                'base_link',  # or 'odom', 'map'
-                'camera_rgb_frame',
-                rclpy.time.Time()
-            )
-        except Exception as e:
-            self.get_logger().warn(f"Failed to get camera transform: {e}")
-            camera_transform = None
-
         # Calculate bounding boxes
-        bboxes = self._calculate_bounding_boxes(camera_transform)
+        bboxes = self._calculate_bounding_boxes()
 
         if not bboxes:
             self.get_logger().debug("No objects in view")
@@ -254,53 +249,79 @@ class AutoLabeler(Node):
         self.capture_count += 1
         self.get_logger().info(f"Captured frame {self.capture_count}, {len(bboxes)} objects labeled")
 
-    def _calculate_bounding_boxes(self, camera_transform) -> List[BoundingBox]:
+    def _calculate_bounding_boxes(self) -> List[BoundingBox]:
         """Calculate 2D bounding boxes from 3D model positions"""
         bboxes = []
+
+        if self.robot_pose is None:
+            return bboxes
 
         for model_name, target in self.targets.items():
             if model_name not in self.model_poses:
                 continue
 
-            pose = self.model_poses[model_name]
+            model_pose = self.model_poses[model_name]
 
-            # Get 3D position in camera frame
-            # For simplicity, we'll use the world position directly
-            # In production, you'd transform this to camera frame
-            pos_3d = np.array([
-                pose.position.x,
-                pose.position.y,
-                pose.position.z
+            # Transform object position to robot-relative coordinates
+            # Object position in world frame
+            obj_world = np.array([
+                model_pose.position.x,
+                model_pose.position.y,
+                model_pose.position.z
+            ])
+
+            # Robot position in world frame
+            robot_world = np.array([
+                self.robot_pose.position.x,
+                self.robot_pose.position.y,
+                self.robot_pose.position.z
+            ])
+
+            # Get robot yaw from quaternion
+            q = self.robot_pose.orientation
+            # Simplified yaw extraction (assumes mostly 2D rotation)
+            siny_cosp = 2 * (q.w * q.z + q.x * q.y)
+            cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
+            robot_yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+            # Transform to robot frame
+            obj_rel = obj_world - robot_world
+
+            # Rotate to robot frame (2D rotation around Z axis)
+            cos_yaw = np.cos(-robot_yaw)
+            sin_yaw = np.sin(-robot_yaw)
+
+            obj_robot = np.array([
+                cos_yaw * obj_rel[0] - sin_yaw * obj_rel[1],
+                sin_yaw * obj_rel[0] + cos_yaw * obj_rel[1],
+                obj_rel[2]
             ])
 
             # Project to 2D
-            bbox = self._project_object(pos_3d, target)
+            bbox = self._project_object(obj_robot, target)
 
             if bbox is not None:
                 bboxes.append(bbox)
 
         return bboxes
 
-    def _project_object(self, pos_3d: np.ndarray, target: TargetObject) -> Optional[BoundingBox]:
+    def _project_object(self, pos_robot: np.ndarray, target: TargetObject) -> Optional[BoundingBox]:
         """Project 3D object to 2D bounding box"""
         if self.camera_matrix is None:
             return None
 
-        # Simple pinhole camera projection
-        # This assumes camera is at origin looking along +X axis
-        # Adjust transformation based on your camera setup
+        # Camera frame convention for TurtleBot3:
+        # Robot frame: X forward, Y left, Z up
+        # Camera frame: Z forward, X right, Y down
 
-        # Transform world coords to camera coords
-        # Camera frame: Z forward, X right, Y down (typical ROS convention)
-        # You may need to adjust this based on your TF tree
-
-        # For Gazebo camera looking along X axis:
-        x_cam = pos_3d[1]   # World Y -> Camera X
-        y_cam = -pos_3d[2]  # World Z -> Camera Y (inverted)
-        z_cam = pos_3d[0]   # World X -> Camera Z (depth)
+        # Transform robot frame to camera frame
+        # Camera is mounted on the robot facing forward
+        x_cam = -pos_robot[1]  # Robot Y (left) -> Camera X (right, negated)
+        y_cam = -pos_robot[2] + 0.1  # Robot Z -> Camera Y (down, with camera height offset)
+        z_cam = pos_robot[0]   # Robot X (forward) -> Camera Z (depth)
 
         # Check if object is in front of camera
-        if z_cam <= 0.1:  # minimum depth
+        if z_cam <= 0.2:  # minimum depth
             return None
 
         # Get camera intrinsics
@@ -338,9 +359,9 @@ class AutoLabeler(Node):
         else:
             return None
 
-        # Check if bbox is within image bounds
-        if (u - width/2 > self.img_width or u + width/2 < 0 or
-            v - height/2 > self.img_height or v + height/2 < 0):
+        # Check if bbox is within image bounds (at least partially visible)
+        if (u + width/2 < 0 or u - width/2 > self.img_width or
+            v + height/2 < 0 or v - height/2 > self.img_height):
             return None
 
         return BoundingBox(
@@ -372,10 +393,12 @@ class AutoLabeler(Node):
 
     def status_callback(self):
         """Print status update"""
+        robot_status = "tracked" if self.robot_pose is not None else "not found"
         self.get_logger().info(
             f"Status: capture={'ON' if self.capture_enabled else 'OFF'}, "
             f"frames={self.capture_count}, "
-            f"models_tracked={len(self.model_poses)}/{len(self.targets)}"
+            f"models_tracked={len(self.model_poses)}/{len(self.targets)}, "
+            f"robot={robot_status}"
         )
 
     def start_capture(self):
