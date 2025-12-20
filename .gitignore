@@ -48,3 +48,12 @@ Thumbs.db
 # Windows ADS (Alternate Data Stream) 파일 무시
 # 예: Chair_Diffuse.png:Zone.Identifier
 *?Zone.Identifier
+
+# Virtual environment
+.venv/
+
+# YOLO Training
+training/data/images/
+training/data/labels/
+training/weights/
+!training/data/dataset.yaml

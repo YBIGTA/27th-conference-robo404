@@ -87,7 +87,9 @@ def generate_launch_description():
             '/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
             '/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            # Model pose for auto-labeling (Gazebo -> ROS2)
+            '/world/default/pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
         ],
         output='screen'
     )
