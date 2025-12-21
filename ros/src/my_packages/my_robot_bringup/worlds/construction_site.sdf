@@ -64,124 +64,501 @@
 
     <!-- Construction Site Walls -->
     <!-- Front Wall -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>front_wall_1</name>
-      <pose>8 -5 0 0 0 1.5708</pose>
-    </include>
+    <model name='front_wall_1'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>8 -5 1 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>front_wall_2</name>
-      <pose>8 0 0 0 0 1.5708</pose>
-    </include>
+    <model name='front_wall_2'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>8 0 1 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>front_wall_3</name>
-      <pose>8 5 0 0 0 1.5708</pose>
-    </include>
+    <model name='front_wall_3'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>8 5 1 0 0 0</pose>
+    </model>
 
     <!-- Back Wall -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>back_wall_1</name>
-      <pose>-8 -5 0 0 0 1.5708</pose>
-    </include>
+    <model name='back_wall_1'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-8 -5 1 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>back_wall_2</name>
-      <pose>-8 0 0 0 0 1.5708</pose>
-    </include>
+    <model name='back_wall_2'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-8 0 1 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>back_wall_3</name>
-      <pose>-8 5 0 0 0 1.5708</pose>
-    </include>
+    <model name='back_wall_3'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.2 5 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-8 5 1 0 0 0</pose>
+    </model>
 
     <!-- Left Wall -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>left_wall_1</name>
-      <pose>-5 -8 0 0 0 0</pose>
-    </include>
+    <model name='left_wall_1'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-5 -8 1 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>left_wall_2</name>
-      <pose>0 -8 0 0 0 0</pose>
-    </include>
+    <model name='left_wall_2'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>0 -8 1 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>left_wall_3</name>
-      <pose>5 -8 0 0 0 0</pose>
-    </include>
+    <model name='left_wall_3'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>5 -8 1 0 0 0</pose>
+    </model>
 
     <!-- Right Wall with entrance -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>right_wall_1</name>
-      <pose>-5 8 0 0 0 0</pose>
-    </include>
+    <model name='right_wall_1'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-5 8 1 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Brick Wall</uri>
-      <name>right_wall_2</name>
-      <pose>5 8 0 0 0 0</pose>
-    </include>
+    <model name='right_wall_2'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>5 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.4 0.3 1</ambient>
+            <diffuse>0.8 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>5 8 1 0 0 0</pose>
+    </model>
 
     <!-- Construction Cones for safety markers -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
-      <name>cone_1</name>
-      <pose>-6 6 0 0 0 0</pose>
-    </include>
+    <model name='cone_1'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>1 0.4 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-6 6 0.25 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
-      <name>cone_2</name>
-      <pose>-6 -6 0 0 0 0</pose>
-    </include>
+    <model name='cone_2'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>1 0.4 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-6 -6 0.25 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
-      <name>cone_3</name>
-      <pose>6 6 0 0 0 0</pose>
-    </include>
+    <model name='cone_3'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>1 0.4 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>6 6 0.25 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
-      <name>cone_4</name>
-      <pose>6 -6 0 0 0 0</pose>
-    </include>
+    <model name='cone_4'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>1 0.4 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>6 -6 0.25 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
-      <name>cone_5</name>
-      <pose>0 6 0 0 0 0</pose>
-    </include>
+    <model name='cone_5'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cone>
+              <radius>0.15</radius>
+              <length>0.5</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>1 0.4 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>0 6 0.25 0 0 0</pose>
+    </model>
 
     <!-- Construction Barrels/Obstacles -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Barrel</uri>
-      <name>barrel_1</name>
-      <pose>-4 -4 0 0 0 0</pose>
-    </include>
+    <model name='barrel_1'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0.6 0 1</ambient>
+            <diffuse>1 0.7 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-4 -4 0.4 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Barrel</uri>
-      <name>barrel_2</name>
-      <pose>4 4 0 0 0 0</pose>
-    </include>
+    <model name='barrel_2'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0.6 0 1</ambient>
+            <diffuse>1 0.7 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>4 4 0.4 0 0 0</pose>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Barrel</uri>
-      <name>barrel_3</name>
-      <pose>-2 2 0 0 0 0</pose>
-    </include>
+    <model name='barrel_3'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0.6 0 1</ambient>
+            <diffuse>1 0.7 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>-2 2 0.4 0 0 0</pose>
+    </model>
 
     <!-- Piles of materials (using boxes as placeholders) -->
     <model name='material_pile_1'>
@@ -390,13 +767,6 @@
       </attenuation>
     </light>
 
-    <!-- Robot spawn point -->
-    <model name='waffle'>
-      <include>
-        <uri>model://turtlebot3_waffle</uri>
-      </include>
-      <pose>0 0 0.01 0 0 0</pose>
-    </model>
 
     <gui fullscreen='false'>
       <camera name='user_camera'>
