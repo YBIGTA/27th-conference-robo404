@@ -1,0 +1,55 @@
+# Auto Labeler Configuration
+# Define target objects for automatic YOLO label generation
+
+# Gazebo world name
+world_name: default
+
+# Capture settings
+capture:
+  interval: 0.5          # seconds between captures
+  min_bbox_size: 10      # minimum bbox size in pixels (skip if smaller)
+  min_visibility: 0.3    # minimum visible ratio (0-1)
+
+# Camera settings (override if different from CameraInfo)
+camera:
+  topic: /camera/image_raw
+  info_topic: /camera/camera_info
+  frame_id: camera_rgb_frame
+
+# Target objects for labeling
+# Each object must match a model name in Gazebo
+targets:
+  - model_name: red_ball_10in    # Must match Gazebo model name exactly
+    class_id: 0                   # YOLO class ID (0-indexed)
+    class_name: red_ball          # Human-readable name
+    geometry_type: sphere         # sphere, box, cylinder
+    size: [0.127]                 # [radius] for sphere (in meters)
+    static_pose: [1.55, 1.74, 0.127]  # [x, y, z] world position from SDF
+
+# Example: Adding more objects later
+# Uncomment and modify as needed:
+#
+#   - model_name: door_08x2m_0
+#     class_id: 1
+#     class_name: door
+#     geometry_type: box
+#     size: [0.8, 0.1, 2.0]       # [width, depth, height] for box
+#
+#   - model_name: Chair
+#     class_id: 2
+#     class_name: chair
+#     geometry_type: box
+#     size: [0.5, 0.5, 1.0]
+#
+#   - model_name: Sofa
+#     class_id: 3
+#     class_name: sofa
+#     geometry_type: box
+#     size: [1.5, 0.8, 0.9]
+
+# Class names summary (must match class_id order)
+class_names:
+  0: red_ball
+  # 1: door
+  # 2: chair
+  # 3: sofa

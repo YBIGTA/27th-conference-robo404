@@ -1775,8 +1775,21 @@
             </surface>
           </collision>
         </link>
-        <link name='camera_link'/>
-        <link name='camera_rgb_frame'>
+        <link name='camera_pan_link'>
+          <inertial>
+            <pose>0.064 -0.065 0.094 0 0 0</pose>
+            <mass>0.01</mass>
+            <inertia>
+              <ixx>0.0001</ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>0.0001</iyy>
+              <iyz>0</iyz>
+              <izz>0.0001</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name='camera_tilt_link'>
           <inertial>
             <pose>0.069000000000000006 -0.047 0.107 0 0 0</pose>
             <inertia>
@@ -1813,7 +1826,7 @@
                 <stddev>0.0070000000000000001</stddev>
               </noise>
             </camera>
-            <gz_frame_id>camera_rgb_frame</gz_frame_id>
+            <gz_frame_id>camera_tilt_link</gz_frame_id>
           </sensor>
         </link>
         <joint name='base_joint' type='fixed'>
@@ -1879,28 +1892,40 @@
             </limit>
           </axis>
         </joint>
-        <joint name='camera_joint' type='fixed'>
+        <joint name='camera_pan_joint' type='revolute'>
           <parent>base_link</parent>
-          <child>camera_link</child>
-          <pose>0.064000000000000001 -0.065000000000000002 0.094 0 0 0</pose>
+          <child>camera_pan_link</child>
+          <pose>0.064 -0.065 0.094 0 0 0</pose>
           <axis>
             <xyz>0 0 1</xyz>
             <limit>
-              <lower>-inf</lower>
-              <upper>inf</upper>
+              <lower>-1.57</lower>
+              <upper>1.57</upper>
+              <effort>10</effort>
+              <velocity>1.0</velocity>
             </limit>
+            <dynamics>
+              <damping>0.5</damping>
+              <friction>0.1</friction>
+            </dynamics>
           </axis>
         </joint>
-        <joint name='camera_rgb_joint' type='fixed'>
-          <parent>camera_link</parent>
-          <child>camera_rgb_frame</child>
-          <pose>0.0050000000000000001 0.017999999999999999 0.012999999999999999 0 0 0</pose>
+        <joint name='camera_tilt_joint' type='revolute'>
+          <parent>camera_pan_link</parent>
+          <child>camera_tilt_link</child>
+          <pose>0.005 0.018 0.013 0 0 0</pose>
           <axis>
-            <xyz>0 0 1</xyz>
+            <xyz>0 1 0</xyz>
             <limit>
-              <lower>-inf</lower>
-              <upper>inf</upper>
+              <lower>-0.17</lower>
+              <upper>0.17</upper>
+              <effort>10</effort>
+              <velocity>1.0</velocity>
             </limit>
+            <dynamics>
+              <damping>0.5</damping>
+              <friction>0.1</friction>
+            </dynamics>
           </axis>
         </joint>
         <plugin name='gz::sim::systems::DiffDrive' filename='gz-sim-diff-drive-system'>
@@ -1920,6 +1945,22 @@
           <topic>joint_states</topic>
           <joint_name>wheel_left_joint</joint_name>
           <joint_name>wheel_right_joint</joint_name>
+          <joint_name>camera_pan_joint</joint_name>
+          <joint_name>camera_tilt_joint</joint_name>
+        </plugin>
+        <plugin name='gz::sim::systems::JointPositionController' filename='gz-sim-joint-position-controller-system'>
+          <joint_name>camera_pan_joint</joint_name>
+          <topic>/camera/pan_cmd</topic>
+          <p_gain>10.0</p_gain>
+          <i_gain>0.1</i_gain>
+          <d_gain>0.5</d_gain>
+        </plugin>
+        <plugin name='gz::sim::systems::JointPositionController' filename='gz-sim-joint-position-controller-system'>
+          <joint_name>camera_tilt_joint</joint_name>
+          <topic>/camera/tilt_cmd</topic>
+          <p_gain>10.0</p_gain>
+          <i_gain>0.1</i_gain>
+          <d_gain>0.5</d_gain>
         </plugin>
       </model>
       <plugin name='ignition::gazebo::systems::DiffDrive' filename='ignition-gazebo-diff-drive-system'>
