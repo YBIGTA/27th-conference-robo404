@@ -93,6 +93,9 @@ def generate_launch_description():
             # Camera joint control (ROS2 -> Gazebo)
             '/camera/pan_cmd@std_msgs/msg/Float64]gz.msgs.Double',
             '/camera/tilt_cmd@std_msgs/msg/Float64]gz.msgs.Double',
+            # Camera depth info from (Gazebo -> Ros2)
+            '/camera/depth/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/camera/depth/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'
         ],
         output='screen'
     )
