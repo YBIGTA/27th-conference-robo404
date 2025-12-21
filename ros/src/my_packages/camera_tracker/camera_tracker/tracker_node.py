@@ -29,6 +29,9 @@ class CameraTrackerNode(Node):
         self.declare_parameter('pan_limit', 1.57)   # rad (~90 degrees)
         self.declare_parameter('tilt_limit', 0.17)  # rad (~10 degrees)
         self.declare_parameter('dead_zone', 80.0)   # pixels
+        # Smoothing parameters
+        self.declare_parameter('smoothing_alpha', 0.2)  # EMA alpha (lower = smoother)
+        self.declare_parameter('max_angular_rate', 0.05)  # rad/cycle (max speed)
 
         # Load parameters
         self.image_width = self.get_parameter('image_width').value
