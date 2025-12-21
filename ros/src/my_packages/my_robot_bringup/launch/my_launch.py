@@ -56,9 +56,50 @@ def generate_launch_description():
                             <uri>model://turtlebot3_waffle</uri>
                         </include>
 
+                        <link name="depth_camera_link">
+                            <pose>0.064 -0.065 0.094 0 0 0</pose>
+                            
+                            <inertial>
+                                <mass>0.01</mass>
+                                <inertia>
+                                    <ixx>0.0001</ixx><ixy>0</ixy><ixz>0</ixz>
+                                    <iyy>0.0001</iyy><iyz>0</iyz><izz>0.0001</izz>
+                                </inertia>
+                            </inertial>
+
+                            <sensor name="camera_depth" type="depth_camera">
+                                <always_on>true</always_on>
+                                <update_rate>30</update_rate>
+                                <topic>camera/depth/image_raw</topic>
+                                <camera name="intel_realsense_r200_depth">
+                                    <camera_info_topic>camera/depth/camera_info</camera_info_topic>
+                                    <horizontal_fov>1.02974</horizontal_fov>
+                                    <image>
+                                        <width>1920</width>
+                                        <height>1080</height>
+                                        <format>R_FLOAT32</format>
+                                    </image>
+                                    <clip>
+                                        <near>0.02</near>
+                                        <far>10.0</far>
+                                    </clip>
+                                    <noise>
+                                        <type>gaussian</type>
+                                        <mean>0.0</mean>
+                                        <stddev>0.007</stddev>
+                                    </noise>
+                                </camera>
+                            </sensor>
+                        </link>
+
+                        <joint name="depth_camera_joint" type="fixed">
+                            <parent>turtlebot3_waffle::base_link</parent>
+                            <child>depth_camera_link</child>
+                        </joint>
+
                         <plugin filename="ignition-gazebo-diff-drive-system" name="ignition::gazebo::systems::DiffDrive">
-                            <left_joint>wheel_left_joint</left_joint>
-                            <right_joint>wheel_right_joint</right_joint>
+                            <left_joint>turtlebot3_waffle::wheel_left_joint</left_joint>
+                            <right_joint>turtlebot3_waffle::wheel_right_joint</right_joint>
                             <wheel_separation>0.287</wheel_separation>
                             <wheel_radius>0.033</wheel_radius>
                             <topic>/cmd_vel</topic>
