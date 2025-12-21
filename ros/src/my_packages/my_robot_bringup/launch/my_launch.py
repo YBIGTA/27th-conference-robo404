@@ -89,7 +89,10 @@ def generate_launch_description():
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
             # Model pose for auto-labeling (Gazebo -> ROS2)
-            '/world/default/pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+            '/world/default/pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            # Camera joint control (ROS2 -> Gazebo)
+            '/camera/pan_cmd@std_msgs/msg/Float64]gz.msgs.Double',
+            '/camera/tilt_cmd@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         output='screen'
     )
