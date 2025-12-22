@@ -11,7 +11,7 @@ import math
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from yolo_msgs.msg import DetectionArray
 
 
@@ -29,6 +29,10 @@ class CameraTrackerNode(Node):
         self.declare_parameter('pan_limit', 1.57)   # rad (~90 degrees)
         self.declare_parameter('tilt_limit', 0.17)  # rad (~10 degrees)
         self.declare_parameter('dead_zone', 80.0)   # pixels
+        self.declare_parameter('target_y_offset', 0.0)  # pixels (positive = target lower = camera looks up)
+        # Smoothing parameters
+        self.declare_parameter('smoothing_alpha', 0.2)  # EMA alpha (lower = smoother)
+        self.declare_parameter('max_angular_rate', 0.05)  # rad/cycle (max speed)
 
         # Load parameters
         self.image_width = self.get_parameter('image_width').value
@@ -40,6 +44,7 @@ class CameraTrackerNode(Node):
         self.pan_limit = self.get_parameter('pan_limit').value
         self.tilt_limit = self.get_parameter('tilt_limit').value
         self.dead_zone = self.get_parameter('dead_zone').value
+        self.target_y_offset = self.get_parameter('target_y_offset').value
 
         # Calculate vertical FOV based on aspect ratio
         aspect_ratio = self.image_width / self.image_height
@@ -66,6 +71,10 @@ class CameraTrackerNode(Node):
         self.pan_pub = self.create_publisher(Float64, '/camera/pan_cmd', 10)
         self.tilt_pub = self.create_publisher(Float64, '/camera/tilt_cmd', 10)
 
+        # Publisher: Camera stability status
+        self.stable_pub = self.create_publisher(Bool, '/camera/stable', 10)
+        self.is_stable = False
+
         # Timer for timeout check and return to home
         self.timer = self.create_timer(0.1, self.timer_callback)
 
@@ -89,17 +98,33 @@ class CameraTrackerNode(Node):
         cx = best_detection.bbox.center.position.x
         cy = best_detection.bbox.center.position.y
 
-        # Calculate offset from image center (pixels)
+        # Calculate offset from target position (pixels)
+        # target_y_offset > 0 moves target down, so camera looks up
         offset_x = cx - (self.image_width / 2)
-        offset_y = cy - (self.image_height / 2)
+        target_y = (self.image_height / 2) + self.target_y_offset
+        offset_y = cy - target_y
 
-        # Check dead zone - if object is near center, just update time
-        if abs(offset_x) < self.dead_zone and abs(offset_y) < self.dead_zone:
-            self.last_detection_time = self.get_clock().now()
-            self.tracking_active = True
-            return
+        # Update tracking state
+        self.last_detection_time = self.get_clock().now()
+        self.tracking_active = True
 
-        # Convert pixel offset to angular offset
+        # Check dead zone - publish stable status (tracking continues regardless)
+        in_dead_zone = abs(offset_x) < self.dead_zone and abs(offset_y) < self.dead_zone
+
+        if in_dead_zone and not self.is_stable:
+            self.is_stable = True
+            stable_msg = Bool()
+            stable_msg.data = True
+            self.stable_pub.publish(stable_msg)
+            self.get_logger().info('Camera stable - object in dead zone')
+        elif not in_dead_zone and self.is_stable:
+            self.is_stable = False
+            stable_msg = Bool()
+            stable_msg.data = False
+            self.stable_pub.publish(stable_msg)
+            self.get_logger().info('Camera unstable - object left dead zone')
+
+        # Convert pixel offset to angular offset (always continue tracking)
         rad_per_pixel_h = self.fov_h / self.image_width
         rad_per_pixel_v = self.fov_v / self.image_height
 
@@ -154,6 +179,12 @@ class CameraTrackerNode(Node):
         self.current_pan = 0.0
         self.current_tilt = 0.0
         self.tracking_active = False
+        # Publish unstable when returning home
+        if self.is_stable:
+            self.is_stable = False
+            stable_msg = Bool()
+            stable_msg.data = False
+            self.stable_pub.publish(stable_msg)
 
     def publish_commands(self, pan: float, tilt: float):
         """Publish joint position commands."""
