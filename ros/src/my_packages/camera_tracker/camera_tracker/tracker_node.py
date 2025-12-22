@@ -29,6 +29,7 @@ class CameraTrackerNode(Node):
         self.declare_parameter('pan_limit', 1.57)   # rad (~90 degrees)
         self.declare_parameter('tilt_limit', 0.17)  # rad (~10 degrees)
         self.declare_parameter('dead_zone', 80.0)   # pixels
+        self.declare_parameter('target_y_offset', 0.0)  # pixels (positive = target lower = camera looks up)
         # Smoothing parameters
         self.declare_parameter('smoothing_alpha', 0.2)  # EMA alpha (lower = smoother)
         self.declare_parameter('max_angular_rate', 0.05)  # rad/cycle (max speed)
@@ -43,6 +44,7 @@ class CameraTrackerNode(Node):
         self.pan_limit = self.get_parameter('pan_limit').value
         self.tilt_limit = self.get_parameter('tilt_limit').value
         self.dead_zone = self.get_parameter('dead_zone').value
+        self.target_y_offset = self.get_parameter('target_y_offset').value
 
         # Calculate vertical FOV based on aspect ratio
         aspect_ratio = self.image_width / self.image_height
@@ -92,9 +94,11 @@ class CameraTrackerNode(Node):
         cx = best_detection.bbox.center.position.x
         cy = best_detection.bbox.center.position.y
 
-        # Calculate offset from image center (pixels)
+        # Calculate offset from target position (pixels)
+        # target_y_offset > 0 moves target down, so camera looks up
         offset_x = cx - (self.image_width / 2)
-        offset_y = cy - (self.image_height / 2)
+        target_y = (self.image_height / 2) + self.target_y_offset
+        offset_y = cy - target_y
 
         # Check dead zone - if object is near center, just update time
         if abs(offset_x) < self.dead_zone and abs(offset_y) < self.dead_zone:

@@ -48,6 +48,12 @@ def generate_launch_description():
         description='Dead zone around center in pixels'
     )
 
+    target_y_offset_arg = DeclareLaunchArgument(
+        'target_y_offset',
+        default_value='180.0',
+        description='Y offset from center in pixels (positive = camera looks up)'
+    )
+
     # Camera tracker node
     tracker_node = Node(
         package='camera_tracker',
@@ -64,6 +70,7 @@ def generate_launch_description():
             'pan_limit': 1.57,
             'tilt_limit': 0.52,
             'dead_zone': LaunchConfiguration('dead_zone'),
+            'target_y_offset': LaunchConfiguration('target_y_offset'),
         }]
     )
 
@@ -75,5 +82,6 @@ def generate_launch_description():
         kp_pan_arg,
         kp_tilt_arg,
         dead_zone_arg,
+        target_y_offset_arg,
         tracker_node,
     ])
