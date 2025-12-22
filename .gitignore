@@ -24,7 +24,6 @@ share/python-wheels/
 MANIFEST
 
 # PyTorch model files
-*.pt
 *.pth
 
 # ROS build directories
