@@ -71,19 +71,42 @@ docker run -it --rm \
 
 ---
 
-## 📂 3. ROS 패키지 구조 (필수)
+## 📂 3. 프로젝트 전체 구조
 
 ```
 27th-conference-robo404/
-└─ros/
-    └─src/
-        ├─external/ # 외부 패키지
-        │  ├─turtlebot3_msgs/
-        │  ├─turtlebot3_simulations/
-        │  └─yolo_ros/
-        └─my_packages/
-            ├─my_robot_bringup/ # 로봇 실행 및 통합 설정 패키지
-            └─ # yolo 관련 커스텀 패키지 폴더 등...
+├─ Dockerfile                # Docker 이미지 빌드 파일
+├─ entrypoint.sh             # Docker 컨테이너 진입점 스크립트
+├─ setup_repos.sh            # 외부 ROS 패키지 클론 스크립트
+├─ README.md
+│
+├─ ros/                      # ROS2 워크스페이스
+│   └─ src/
+│       ├─ external/         # 외부 패키지 (setup_repos.sh로 클론)
+│       │   ├─ turtlebot3_msgs/           # TurtleBot3 메시지 정의
+│       │   ├─ turtlebot3_simulations/    # TurtleBot3 시뮬레이션
+│       │   └─ yolo_ros/                  # YOLO ROS2 통합
+│       │
+│       └─ my_packages/      # 커스텀 패키지
+│           ├─ my_robot_bringup/          # 로봇 실행 및 통합 설정
+│           │   ├─ launch/                # 런치 파일 (my_launch.py)
+│           │   ├─ maps/                  # SLAM 맵 파일 (.pgm, .yaml)
+│           │   ├─ models/                # 3D 모델 (Chair, Sofa, 등)
+│           │   └─ worlds/                # Gazebo 월드 파일 (.sdf)
+│           │
+│           └─ camera_tracker/            # 카메라 트래킹 노드
+│               ├─ camera_tracker/        # 트래커 노드 구현
+│               └─ launch/                # 런치 파일
+│
+├─ training/                 # YOLO 모델 학습
+│   ├─ auto_labeler.py       # 자동 라벨링 스크립트
+│   ├─ split_data.py         # 데이터 분할 스크립트
+│   ├─ train.py              # 학습 스크립트
+│   ├─ label_config.yaml     # 라벨 설정
+│   └─ data/                 # 학습 데이터
+│
+└─ runs/                     # YOLO 추론 결과
+    └─ detect/               # 탐지 결과
 ```
 
 ---
