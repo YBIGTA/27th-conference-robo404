@@ -151,22 +151,28 @@ class DetectionHandlerNode(Node):
                 self.movement_cmd_pub.publish(cmd)
 
     def get_3d_map_pose(self, detection):
-        """Convert 3D detection directly to map pose"""
+        """Convert 3D detection to map pose with an APPROACH OFFSET"""
         try:
-            # FIX 1: Use the correct class from geometry_msgs
-            p_cam = PoseStamped() 
+            p_cam = PoseStamped()
             p_cam.header.frame_id = detection.bbox3d.frame_id 
+            p_cam.header.stamp = rclpy.time.Time().to_msg() # Use Sim Time 0 for latest transform
             
-            # FIX 2: Use the Node's clock for "Right Now"
-            # rclpy.time.Time() creates a 0-timestamp which causes extrapolation errors
-            p_cam.header.stamp = self.get_clock().now().to_msg()
+            # --- FIX: Apply Approach Offset ---
+            # The 'z' axis in optical frames is usually the forward distance.
+            # We want to stop 0.7 meters BEFORE the object.
+            raw_depth = detection.bbox3d.center.position.z
+            approach_offset = 0.4  # How far to stop from the object (in meters)
             
-            p_cam.pose.position = detection.bbox3d.center.position
+            # Ensure we don't set a target behind the camera (min distance 0.3m)
+            target_depth = max(0.3, raw_depth - approach_offset)
+            
+            p_cam.pose.position.x = detection.bbox3d.center.position.x
+            p_cam.pose.position.y = detection.bbox3d.center.position.y
+            p_cam.pose.position.z = target_depth # Use the adjusted depth
+            
             p_cam.pose.orientation.w = 1.0 
 
-            # FIX 3: Use the buffer's built-in transform method
-            # This handles the lookup, the math, and the timeout automatically.
-            # We give it 1.0 second to find the transform to avoid timing issues.
+            # Transform this "Approach Point" to the Map Frame
             target_pose = self.tf_buffer.transform(p_cam, 'map', timeout=rclpy.duration.Duration(seconds=1.0))
             
             return target_pose

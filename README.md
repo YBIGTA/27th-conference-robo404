@@ -141,3 +141,40 @@ ros2 topic hz /yolo/detections
 ```bash
 ros2 launch detect_n_move detect_n_move.launch.py use_sim_time:=true
 ```
+
+extra debugging
+```bash
+ros2 topic echo /yolo/detections_3d
+```
+
+
+## Fast run
+### 0. docker
+docker run -it --rm \
+  --name ros-dev \
+  --gpus all \
+  -e DISPLAY=$DISPLAY \
+  -e QT_X11_NO_MITSHM=1 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v $(pwd)/ros:/root/ros \
+  my-ros-jazzy-dev
+### 1. myworld
+ros2 launch my_robot_bringup my_launch.py
+### 2. Nav2
+bash
+docker exec -it ros-dev bash
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=/root/ros/src/my_packages/my_robot_bringup/maps/my_map.yaml
+### 3. YOLOv8 노드
+bash
+docker exec -it ros-dev bash
+
+ros2 launch yolo_bringup yolov8.launch.py \
+  model:=yolov8n device:=cuda:0 input_image_topic:=/custom_camera/image_raw use_3d:=True
+
+### 4. 이미지 확인 / FPS 체크
+bash
+docker exec -it ros-dev bash
+ros2 run rqt_image_view rqt_image_view
+### 5. Detect_n_Move
+bash
+ros2 launch detect_n_move detect_n_move.launch.py use_sim_time:=true

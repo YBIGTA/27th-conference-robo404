@@ -56,8 +56,93 @@ def generate_launch_description():
                             <uri>model://turtlebot3_waffle</uri>
                         </include>
 
+                        <link name="custom_camera_link">
+                            <pose>0.15 0.0 0.25 0 0 0</pose> <inertial>
+                                <mass>0.01</mass>
+                                <inertia>
+                                    <ixx>0.0001</ixx><ixy>0</ixy><ixz>0</ixz>
+                                    <iyy>0.0001</iyy><iyz>0</iyz><izz>0.0001</izz>
+                                </inertia>
+                            </inertial>
+
+                            <sensor name="camera_depth" type="depth_camera">
+                                <always_on>true</always_on>
+                                <update_rate>30</update_rate>
+                                <topic>custom_camera/depth/image_raw</topic> <camera name="custom_realsense_depth">
+                                    <horizontal_fov>1.02974</horizontal_fov>
+                                    <image>
+                                        <width>1920</width>
+                                        <height>1080</height>
+                                        <format>R_FLOAT32</format>
+                                    </image>
+                                    <clip>
+                                        <near>0.1</near>
+                                        <far>10.0</far>
+                                    </clip>
+                                </camera>
+                            </sensor>
+
+                            <sensor name="camera_rgb" type="camera">
+                                <always_on>true</always_on>
+                                <update_rate>30</update_rate>
+                                <topic>custom_camera/image_raw</topic> <camera name="custom_realsense_rgb">
+                                    <horizontal_fov>1.02974</horizontal_fov> <image>
+                                        <width>1920</width>
+                                        <height>1080</height>
+                                        <format>R8G8B8</format>
+                                    </image>
+                                    <clip>
+                                        <near>0.02</near>
+                                        <far>10.0</far>
+                                    </clip>
+                                </camera>
+                            </sensor>
+                        </link>
+
+                        <joint name="custom_camera_joint" type="fixed">
+                            <parent>turtlebot3_waffle::base_link</parent>
+                            <child>custom_camera_link</child>
+                        </joint>
+
+                        <plugin filename="ignition-gazebo-diff-drive-system" name="ignition::gazebo::systems::DiffDrive">
+                            <left_joint>turtlebot3_waffle::wheel_left_joint</left_joint>
+                            <right_joint>turtlebot3_waffle::wheel_right_joint</right_joint>
+                            <wheel_separation>0.287</wheel_separation>
+                            <wheel_radius>0.033</wheel_radius>
+                            <topic>/cmd_vel</topic>
+                            <odom_publish_frequency>30</odom_publish_frequency>
+                        </plugin>
+                        
+                        <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
+                            <render_engine>ogre2</render_engine>
+                        </plugin>
+
+                    </model>
+                </sdf>
+            '''
+        ],
+    )
+    
+
+
+
+    """
+    spawn_entity = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=[
+            '-name', 'waffle',
+            '-topic', 'robot_description',
+            '-x', '0.0', '-y', '0.0', '-z', '0.1',
+            '-string', '''
+                <sdf version="1.6">
+                    <model name="waffle_with_sensors">
+                        <include>
+                            <uri>model://turtlebot3_waffle</uri>
+                        </include>
+
                         <link name="depth_camera_link">
-                            <pose>0.064 -0.065 0.094 0 0 0</pose>
+                            <pose>0.15 -0.065 0.25 0 0 0</pose>
                             
                             <inertial>
                                 <mass>0.01</mass>
@@ -80,7 +165,7 @@ def generate_launch_description():
                                         <format>R_FLOAT32</format>
                                     </image>
                                     <clip>
-                                        <near>0.02</near>
+                                        <near>0.1</near>
                                         <far>10.0</far>
                                     </clip>
                                     <noise>
@@ -116,6 +201,7 @@ def generate_launch_description():
         ],
         output='screen',
     )
+    """
 
     # ROS-Gazebo Bridge
     bridge = Node(
@@ -136,7 +222,10 @@ def generate_launch_description():
             '/camera/tilt_cmd@std_msgs/msg/Float64]gz.msgs.Double',
             # Camera depth info from (Gazebo -> Ros2)
             '/camera/depth/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/depth/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'
+            '/camera/depth/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            # Custom camera bridges
+            '/custom_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/custom_camera/depth/image_raw@sensor_msgs/msg/Image[gz.msgs.Image'
         ],
         output='screen'
     )
