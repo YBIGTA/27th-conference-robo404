@@ -42,7 +42,7 @@ GZ_SIM_RESOURCE_PATH=$PWD/models gz sim worlds/labeled_world.sdf
 ### 3. ROS2 Launch로 실행 (선택)
 
 ```bash
-python3 launch_labeled_world.py
+ros2 launch ./launch_labeled_world.py
 ```
 
 ## 의존성
