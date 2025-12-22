@@ -52,12 +52,12 @@ ros2 launch yolo_bringup yolov8.launch.py model:=yolov8n input_image_topic:=/cam
 # YOLO 객체 탐지 (커스텀 모델 - chair_state_v1)
 # Docker 환경에서 실행
 ros2 launch yolo_bringup yolov8.launch.py \
-  model:=/root/training/weights/train3/weights/chair_state_v1_best.pt \
+  model:=/root/training/weights/train3/chair_state_v1_best.pt \
   input_image_topic:=/camera/image_raw
 
 # 호스트 환경에서 실행 시
 ros2 launch yolo_bringup yolov8.launch.py \
-  model:=/home/junchan/github/27th-conference-robo404/training/weights/train3/weights/chair_state_v1_best.pt \
+  model:=/home/junchan/github/27th-conference-robo404/training/weights/train3/chair_state_v1_best.pt \
   input_image_topic:=/camera/image_raw
 
 # 카메라 추적
@@ -79,14 +79,14 @@ ros2 launch vision_api analyzer.launch.py api_provider:=huggingface
 ## 커스텀 YOLO 모델
 
 ### chair_state_v1 모델
-- **위치**: `training/weights/train3/weights/chair_state_v1_best.pt`
+- **위치**: `training/weights/train3/chair_state_v1_best.pt`
 - **용도**: 의자 상태 탐지 (정상/전도 등)
 - **학습**: YOLOv8 기반 커스텀 학습 모델
 
 ### Docker 환경 경로 차이
 프로젝트가 Docker 컨테이너에서 실행될 때 경로 매핑에 유의:
-- **호스트 경로**: `/home/junchan/github/27th-conference-robo404/training/weights/train3/weights/chair_state_v1_best.pt`
-- **Docker 내부 경로**: `/root/training/weights/train3/weights/chair_state_v1_best.pt`
+- **호스트 경로**: `/home/junchan/github/27th-conference-robo404/training/weights/train3/chair_state_v1_best.pt`
+- **Docker 내부 경로**: `/root/training/weights/train3/chair_state_v1_best.pt`
 
 ROS 명령어 실행 시 현재 환경에 맞는 경로를 사용해야 함.
 

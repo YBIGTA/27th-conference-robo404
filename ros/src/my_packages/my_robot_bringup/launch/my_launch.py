@@ -91,6 +91,16 @@ def generate_launch_description():
                             <wheel_radius>0.033</wheel_radius>
                             <topic>/cmd_vel</topic>
                             <odom_publish_frequency>30</odom_publish_frequency>
+
+                            <!-- Speed limits (m/s and rad/s) -->
+                            <max_linear_velocity>1</max_linear_velocity>
+                            <min_linear_velocity>-0.5</min_linear_velocity>
+                            <max_angular_velocity>1.5</max_angular_velocity>
+                            <min_angular_velocity>-1.5</min_angular_velocity>
+
+                            <!-- Acceleration limits -->
+                            <max_linear_acceleration>0.5</max_linear_acceleration>
+                            <max_angular_acceleration>2.0</max_angular_acceleration>
                         </plugin>
 
                         <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">

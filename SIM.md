@@ -12,6 +12,7 @@ docker build -t my-ros-jazzy-dev .
 
 ```bash
 xhost +local:root
+
 docker run -it --rm \
   --name ros-dev \
   --gpus all \
@@ -19,6 +20,7 @@ docker run -it --rm \
   -e QT_X11_NO_MITSHM=1 \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v $(pwd)/ros:/root/ros \
+  -v $(pwd)/training:/root/training \
   my-ros-jazzy-dev
 ```
 
@@ -37,7 +39,6 @@ ros2 launch my_robot_bringup my_launch.py
 ### 2. Nav2
 
 ```bash
-docker exec -it ros-dev bash
 ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=/root/ros/src/my_packages/my_robot_bringup/maps/my_default_map.yaml
 ```
 
@@ -46,9 +47,8 @@ ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:
 **GPU**
 
 ```bash
-docker exec -it ros-dev bash
 ros2 launch yolo_bringup yolov8.launch.py \
-  model:=/root/training/weights/train3/weights/chair_state_v1_best.pt device:=cuda:0 input_image_topic:=/camera/image_raw threshold:=0.5
+  model:=/root/training/weights/train3/chair_state_v1_best.pt device:=cuda:0 input_image_topic:=/camera/image_raw threshold:=0.5
 ```
 
 ### 4. Tracker
