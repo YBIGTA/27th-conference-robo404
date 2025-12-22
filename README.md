@@ -169,12 +169,21 @@ bash
 docker exec -it ros-dev bash
 
 ros2 launch yolo_bringup yolov8.launch.py \
-  model:=yolov8n device:=cuda:0 input_image_topic:=/custom_camera/image_raw use_3d:=True
+  model:=yolov8n \
+  device:=cuda:0 \
+  input_image_topic:=/custom_camera/image_raw \
+  input_depth_topic:=/custom_camera/depth/image_raw \
+  input_depth_info_topic:=/custom_camera/depth/camera_info \
+  target_frame:=custom_camera_depth_optical_frame \
+  use_3d:=True
 
 ### 4. 이미지 확인 / FPS 체크
 bash
 docker exec -it ros-dev bash
 ros2 run rqt_image_view rqt_image_view
 ### 5. Detect_n_Move
-bash
-ros2 launch detect_n_move detect_n_move.launch.py use_sim_time:=true
+
+ros2 launch detect_n_move detect_n_move.launch.py \
+    use_sim_time:=true \
+    image_topic:=/custom_camera/image_raw \
+    depth_topic:=/custom_camera/depth/image_raw

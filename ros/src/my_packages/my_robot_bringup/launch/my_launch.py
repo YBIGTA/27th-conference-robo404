@@ -203,6 +203,59 @@ def generate_launch_description():
     )
     """
 
+    # Static transforms for custom camera optical frames
+    static_tf_custom_camera = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='custom_camera_optical_tf',
+        arguments=['0', '0', '0', '-1.57', '0', '-1.57', 'custom_camera_link', 'custom_camera_optical_frame'],
+        output='screen'
+    )
+
+    static_tf_custom_depth = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='custom_depth_optical_tf',
+        arguments=['0', '0', '0', '-1.57', '0', '-1.57', 'custom_camera_link', 'custom_camera_depth_optical_frame'],
+        output='screen'
+    )
+
+    # Add the exact frame that YOLO expects
+    static_tf_yolo_frame = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='yolo_expected_frame_tf',
+        arguments=['0', '0', '0', '0', '0', '0', 'custom_camera_depth_optical_frame', 'waffle/custom_camera_link/camera_depth'],
+        output='screen'
+    )
+
+    # CRITICAL FIX: Connect depth camera frame to depth optical frame
+    static_tf_depth_to_optical = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='depth_to_optical_tf',
+        arguments=['0', '0', '0', '0', '0', '0', 'waffle/custom_camera_link/camera_depth', 'custom_camera_depth_optical_frame'],
+        output='screen'
+    )
+
+    # Connect map frame to robot (for navigation)
+    static_tf_map_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='map_to_odom_tf',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        output='screen'
+    )
+
+    # CRITICAL: Connect custom_camera_link to base_link (missing from robot model)
+    static_tf_base_to_custom_camera = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='base_to_custom_camera_tf',
+        arguments=['0.15', '0.0', '0.25', '0', '0', '0', 'base_link', 'custom_camera_link'],
+        output='screen'
+    )
+
     # ROS-Gazebo Bridge
     bridge = Node(
         package='ros_gz_bridge',
@@ -225,7 +278,8 @@ def generate_launch_description():
             '/camera/depth/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
             # Custom camera bridges
             '/custom_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/custom_camera/depth/image_raw@sensor_msgs/msg/Image[gz.msgs.Image'
+            '/custom_camera/depth/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/custom_camera/depth/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'
         ],
         output='screen'
     )
@@ -236,5 +290,11 @@ def generate_launch_description():
         gz_sim,
         robot_state_publisher,
         spawn_entity,
+        static_tf_custom_camera,
+        static_tf_custom_depth,
+        static_tf_yolo_frame,
+        static_tf_depth_to_optical,
+        static_tf_map_odom,
+        static_tf_base_to_custom_camera,
         bridge
     ])

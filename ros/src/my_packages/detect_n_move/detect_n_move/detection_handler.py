@@ -138,11 +138,16 @@ class DetectionHandlerNode(Node):
         self.event_pub.publish(msg)
 
         if self.current_target != obj_class:
+            # DEBUG: Log raw detection data
+            self.get_logger().info(f"RAW Detection - Class: {obj_class}")
+            self.get_logger().info(f"RAW bbox3d center: x={detection.bbox3d.center.position.x:.3f}, y={detection.bbox3d.center.position.y:.3f}, z={detection.bbox3d.center.position.z:.3f}")
+            self.get_logger().info(f"RAW bbox3d frame: {detection.bbox3d.frame_id}")
+            
             map_pose = self.get_3d_map_pose(detection)
             
             if map_pose:
                 self.current_target = obj_class
-                self.get_logger().info(f"Target locked: {obj_class} at Map (x={map_pose.pose.position.x:.2f}, y={map_pose.pose.position.y:.2f})")
+                self.get_logger().info(f"Target locked: {obj_class} at Map (x={map_pose.pose.position.x:.2f}, y={map_pose.pose.position.y:.2f}, z={map_pose.pose.position.z:.2f})")
                 
                 self.target_pose_pub.publish(map_pose)
                 
@@ -154,17 +159,18 @@ class DetectionHandlerNode(Node):
         """Convert 3D detection to map pose with an APPROACH OFFSET"""
         try:
             p_cam = PoseStamped()
-            p_cam.header.frame_id = detection.bbox3d.frame_id 
+            # Use custom_camera_depth_optical_frame as the source frame
+            p_cam.header.frame_id = 'custom_camera_depth_optical_frame'
             p_cam.header.stamp = rclpy.time.Time().to_msg() # Use Sim Time 0 for latest transform
             
             # --- FIX: Apply Approach Offset ---
             # The 'z' axis in optical frames is usually the forward distance.
-            # We want to stop 0.7 meters BEFORE the object.
+            # We want to stop at a reasonable distance from the object.
             raw_depth = detection.bbox3d.center.position.z
-            approach_offset = 0.4  # How far to stop from the object (in meters)
+            approach_offset = 0.3  # How far to stop from the object (in meters) - SAFER DISTANCE
             
-            # Ensure we don't set a target behind the camera (min distance 0.3m)
-            target_depth = max(0.3, raw_depth - approach_offset)
+            # Ensure we don't set a target behind the camera (min distance 0.2m)
+            target_depth = max(0.2, raw_depth - approach_offset)
             
             p_cam.pose.position.x = detection.bbox3d.center.position.x
             p_cam.pose.position.y = detection.bbox3d.center.position.y
@@ -174,6 +180,9 @@ class DetectionHandlerNode(Node):
 
             # Transform this "Approach Point" to the Map Frame
             target_pose = self.tf_buffer.transform(p_cam, 'map', timeout=rclpy.duration.Duration(seconds=1.0))
+            
+            # DEBUG: Log the final transformed coordinates
+            self.get_logger().info(f"TRANSFORMED to Map - x={target_pose.pose.position.x:.3f}, y={target_pose.pose.position.y:.3f}, z={target_pose.pose.position.z:.3f}")
             
             return target_pose
             

@@ -1,29 +1,32 @@
 #!/usr/bin/env python3
 """
-Movement Controller Node (Simple Relay) - ROBUST VERSION
-Logic: Receives /target_pose -> Sanitize -> Sends to Nav2 /goal_pose
+Movement Controller Node (Simple Version)
+Logic: Get chair coordinate -> Move toward chair -> Done!
 """
 
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy
+from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 
 class MovementControllerNode(Node):
     def __init__(self):
         super().__init__('movement_controller_node')
         
-        # 1. QoS Profile (Must match Nav2's Best Effort)
-        qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            depth=10
-        )
-
-        self.create_subscription(PoseStamped, '/target_pose', self.pose_callback, 10)
-        self.nav_pub = self.create_publisher(PoseStamped, '/goal_pose', qos_profile)
+        # Initialize Nav2
+        self.nav = BasicNavigator()
         
-        self.get_logger().info('Movement Controller Ready. Waiting for target...')
+        # Simple state
+        self.navigation_in_progress = False
         self.last_goal_time = self.get_clock().now()
+        
+        # Subscriber
+        self.create_subscription(PoseStamped, '/target_pose', self.pose_callback, 10)
+        
+        # Timer to check navigation status
+        self.timer = self.create_timer(1.0, self.check_navigation_status)
+        
+        self.get_logger().info('Simple Movement Controller Ready. Waiting for chair...')
 
     def pose_callback(self, msg: PoseStamped):
         # Rate Limit (2 seconds)
@@ -31,25 +34,62 @@ class MovementControllerNode(Node):
         if (current_time - self.last_goal_time).nanoseconds < 2 * 1e9:
             return
 
-        self.get_logger().info(f"Forwarding goal: x={msg.pose.position.x:.2f}, y={msg.pose.position.y:.2f}")
+        # Skip if already navigating
+        if self.navigation_in_progress:
+            return
 
-        # --- FIX 1: Timestamp Hack ---
-        # Setting time to 0 tells Nav2 "Ignore the timestamp and just do it now."
-        # This bypasses any System Time vs Sim Time conflicts.
-        msg.header.stamp.sec = 0
-        msg.header.stamp.nanosec = 0
-        
-        # --- FIX 2: Flatten the Z-Axis ---
-        # Nav2 is a 2D navigator. A goal floating in the air (z=0.5) can cause failures.
-        msg.pose.position.z = 0.0
-        
-        # --- FIX 3: Ensure Valid Orientation ---
-        # If orientation is empty/invalid, Nav2 rejects it. Default to facing forward.
-        if msg.pose.orientation.w == 0.0 and msg.pose.orientation.x == 0.0 and msg.pose.orientation.y == 0.0 and msg.pose.orientation.z == 0.0:
-            msg.pose.orientation.w = 1.0
+        self.get_logger().info(f"Moving to chair at: x={msg.pose.position.x:.2f}, y={msg.pose.position.y:.2f}")
 
-        self.nav_pub.publish(msg)
+        # Prepare goal pose
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'map'
+        goal_pose.header.stamp = self.nav.get_clock().now().to_msg()
+        
+        # Position (flattened for 2D navigation)
+        goal_pose.pose.position.x = msg.pose.position.x
+        goal_pose.pose.position.y = msg.pose.position.y
+        goal_pose.pose.position.z = 0.0
+        
+        # Default orientation
+        goal_pose.pose.orientation.w = 1.0
+
+        # Start navigation
+        self.get_logger().info("Sending goal to Nav2...")
+        self.nav.goToPose(goal_pose)
+        self.navigation_in_progress = True
         self.last_goal_time = current_time
+        
+        # Debug: Check if Nav2 accepted the goal
+        self.create_timer(2.0, self.check_nav2_status)
+
+    def check_navigation_status(self):
+        """Simple check if navigation is complete"""
+        if not self.navigation_in_progress:
+            return
+            
+        if self.nav.isTaskComplete():
+            result = self.nav.getResult()
+            self.navigation_in_progress = False
+            
+            if result == TaskResult.SUCCEEDED:
+                self.get_logger().info("✅ Reached chair!")
+            elif result == TaskResult.FAILED:
+                self.get_logger().error("❌ Navigation failed!")
+            else:
+                self.get_logger().warn(f"Navigation result: {result}")
+
+    def check_nav2_status(self):
+        """Debug Nav2 connection"""
+        try:
+            if self.nav.isTaskComplete():
+                self.get_logger().info("Nav2 task completed (quick finish)")
+            else:
+                self.get_logger().info("Nav2 task is running...")
+        except Exception as e:
+            self.get_logger().error(f"Nav2 connection error: {e}")
+        
+        # Only run once
+        self.destroy_timer(self.check_nav2_status)
 
 def main(args=None):
     rclpy.init(args=args)
