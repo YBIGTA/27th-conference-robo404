@@ -11,7 +11,7 @@ import math
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from yolo_msgs.msg import DetectionArray
 
 
@@ -71,6 +71,10 @@ class CameraTrackerNode(Node):
         self.pan_pub = self.create_publisher(Float64, '/camera/pan_cmd', 10)
         self.tilt_pub = self.create_publisher(Float64, '/camera/tilt_cmd', 10)
 
+        # Publisher: Camera stability status
+        self.stable_pub = self.create_publisher(Bool, '/camera/stable', 10)
+        self.is_stable = False
+
         # Timer for timeout check and return to home
         self.timer = self.create_timer(0.1, self.timer_callback)
 
@@ -100,11 +104,24 @@ class CameraTrackerNode(Node):
         target_y = (self.image_height / 2) + self.target_y_offset
         offset_y = cy - target_y
 
-        # Check dead zone - if object is near center, just update time
+        # Check dead zone - if object is near center, camera is stable
         if abs(offset_x) < self.dead_zone and abs(offset_y) < self.dead_zone:
             self.last_detection_time = self.get_clock().now()
             self.tracking_active = True
+            # Publish stable status (only on state change)
+            if not self.is_stable:
+                self.is_stable = True
+                stable_msg = Bool()
+                stable_msg.data = True
+                self.stable_pub.publish(stable_msg)
             return
+
+        # Camera is moving, publish unstable
+        if self.is_stable:
+            self.is_stable = False
+            stable_msg = Bool()
+            stable_msg.data = False
+            self.stable_pub.publish(stable_msg)
 
         # Convert pixel offset to angular offset
         rad_per_pixel_h = self.fov_h / self.image_width
@@ -161,6 +178,12 @@ class CameraTrackerNode(Node):
         self.current_pan = 0.0
         self.current_tilt = 0.0
         self.tracking_active = False
+        # Publish unstable when returning home
+        if self.is_stable:
+            self.is_stable = False
+            stable_msg = Bool()
+            stable_msg.data = False
+            self.stable_pub.publish(stable_msg)
 
     def publish_commands(self, pan: float, tilt: float):
         """Publish joint position commands."""
