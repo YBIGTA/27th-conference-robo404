@@ -38,9 +38,57 @@ vision_api/
 
 ## 3. 아키텍처 및 데이터 흐름
 
+### 3.1 전체 시스템 토픽 연결
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           전체 시스템 토픽 연결 구조                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+                         /camera/image_raw
+┌───────────┐ ─────────────────┬─────────────────────────┐
+│  Gazebo   │                  │                         │
+│  카메라    │                  ▼                         ▼
+└───────────┘           ┌─────────────┐           ┌─────────────┐
+                        │  yolo_node  │           │ vision_api  │
+                        └──────┬──────┘           └──────┬──────┘
+                               │                         ▲
+                               │ /yolo/detections        │ /camera/stable
+                               ▼                         │
+                        ┌─────────────┐                  │
+                        │   camera    │──────────────────┘
+                        │   tracker   │
+                        └──────┬──────┘
+                               │
+                               │ /camera/pan_cmd
+                               │ /camera/tilt_cmd
+                               ▼
+                        ┌─────────────┐
+                        │   Gazebo    │
+                        │  Pan/Tilt   │
+                        └─────────────┘
+```
+
+**노드별 입출력 토픽:**
+
+| 노드 | 입력 토픽 | 출력 토픽 |
+|------|----------|----------|
+| yolo_node | `/camera/image_raw` | `/yolo/detections` |
+| camera_tracker | `/yolo/detections` | `/camera/pan_cmd`, `/camera/tilt_cmd`, `/camera/stable` |
+| vision_api | `/camera/image_raw`, `/camera/stable` | `/vision/analysis_result` |
+
+**핵심 포인트:**
+- `camera_tracker`는 이미지를 직접 받지 않고, YOLO가 계산한 **bbox 좌표**만 사용
+- `vision_api`는 `camera_tracker`의 `/camera/stable` 신호를 받아 안정화 시점에 분석 수행
+- Gazebo 카메라 이미지는 `yolo_node`와 `vision_api` 두 노드가 동시에 구독
+
+---
+
+### 3.2 vision_api 노드 내부 흐름
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         ROS 2 토픽 흐름                              │
+│                    vision_analyzer 노드 내부 흐름                     │
 └─────────────────────────────────────────────────────────────────────┘
 
 [camera_tracker 노드]                    [vision_analyzer 노드]
