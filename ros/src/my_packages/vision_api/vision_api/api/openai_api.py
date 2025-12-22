@@ -12,7 +12,6 @@ class OpenAIVisionAPI(VisionAPIBase):
 
     def __init__(self, api_key: str, model: str = None):
         super().__init__(api_key, model or self.DEFAULT_MODEL)
-        self._client = None
 
     def _validate_credentials(self) -> None:
         """Initialize OpenAI client."""
