@@ -39,20 +39,20 @@
         </link>
       </model>
       <model name='Chair'>
-        <pose>1 0.10000000000000001 0 -4.0000000000000049e-06 1.9999999999999999e-06 3.1415000000000002</pose>
+        <pose>1 0.10000000000000001 0 -4.0000000000000066e-06 1.9999999999999999e-06 3.1415000000000002</pose>
         <scale>1 1 1</scale>
         <link name='body'>
-          <pose>1 0.10000000000000001 0 1.9999999999999969e-06 4.0000000000000032e-06 -1.5708800000000014</pose>
+          <pose>1 0.10000000000000001 0 1.9999999999999969e-06 4.0000000000000066e-06 -1.5708800000000018</pose>
           <velocity>0 0 0 0 0 0</velocity>
           <acceleration>0 0 0 0 0 0</acceleration>
           <wrench>0 0 0 0 0 0</wrench>
         </link>
       </model>
       <model name='CoffeeTable'>
-        <pose>0 0.10000000000000001 -0.00012899999999999999 2.000000000000005e-06 -2.0000000000000025e-06 -4.0389678347396584e-27</pose>
+        <pose>0 0.10000000000000001 -0.00012899999999999999 2.0000000000000067e-06 -2.0000000000000033e-06 -5.6545549686355213e-27</pose>
         <scale>1 1 1</scale>
         <link name='body'>
-          <pose>0 0.10000000000000001 -0.00012899999999999999 2.000000000000005e-06 -2.0000000000000025e-06 -4.0389678347396584e-27</pose>
+          <pose>0 0.10000000000000001 -0.00012899999999999999 2.0000000000000067e-06 -2.0000000000000033e-06 -5.6545549686355213e-27</pose>
           <velocity>0 0 0 0 0 0</velocity>
           <acceleration>0 0 0 0 0 0</acceleration>
           <wrench>0 0 0 0 0 0</wrench>
@@ -89,7 +89,7 @@
         </link>
       </model>
       <model name='MiniSofa'>
-        <pose>-1 0.10000000000000001 -0.00089700000000000001 -4.0000000000000049e-06 -1.2e-05 -3.1415000000000002</pose>
+        <pose>-1 0.10000000000000001 -0.00089700000000000001 -4.0000000000000066e-06 -1.2e-05 -3.1415000000000002</pose>
         <scale>1 1 1</scale>
         <link name='body'>
           <pose>-1 0.10000000000000001 -0.00089700000000000001 1.2e-05 -3.9999999999999998e-06 1.5708800000000001</pose>
@@ -258,7 +258,7 @@
     </state>
     <gui fullscreen='false'>
       <camera name='user_camera'>
-        <pose>-1.58866 -7.3818400000000004 7.1969500000000002 7.0366386019639496e-17 0.66180000000000061 1.0642600000000004</pose>
+        <pose>-1.58866 -7.3818400000000004 7.1969500000000002 2.1109915805891848e-16 0.66180000000000061 1.0642600000000006</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -300,7 +300,10 @@
             </plane>
           </geometry>
           <material>
-            <ambient>0.5 0.5 0.5 1</ambient> <diffuse>0.5 0.5 0.5 1</diffuse> <specular>0.1 0.1 0.1 1</specular> </material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.100000001 0.100000001 0.100000001 1</specular>
+          </material>
         </visual>
         <self_collide>false</self_collide>
         <enable_wind>false</enable_wind>
@@ -371,7 +374,7 @@
         <enable_wind>false</enable_wind>
         <kinematic>false</kinematic>
       </link>
-      <pose>-0.12377800047397614 0.83931869268417358 0 0 0 0</pose>
+      <pose>-0.12377800047397614 1.0393186926841735 0 0 0 0</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='MiniSofa'>
@@ -423,7 +426,7 @@
         <enable_wind>false</enable_wind>
         <kinematic>false</kinematic>
       </link>
-      <pose>-0.026160793378949165 2.4164633750915527 0 0 0 1.5700000038073603</pose>
+      <pose>-0.026160793378949165 2.4164633750915527 0 0 0 1.5700000036366957</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='Chair'>
@@ -475,7 +478,7 @@
         <enable_wind>false</enable_wind>
         <kinematic>false</kinematic>
       </link>
-      <pose>-0.80956536531448364 -0.82470279932022095 0 0 0 0.47166601165607036</pose>
+      <pose>-0.80383902788162231 -0.83592915534973145 0.27932164072990417 -1.5257099738095659 -3.5292593847380267e-08 0.471665984570248</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='Bookshelf'>
@@ -1357,6 +1360,58 @@
         <pose>0 0 0 0 0 0</pose>
       </link>
       <static>false</static>
+      <self_collide>false</self_collide>
+    </model>
+    <model name='MiniSofa_1'>
+      <static>true</static>
+      <link name='body'>
+        <pose>0 0 0 0 0 -1.5708</pose>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://minisofa/minisofa.obj</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://minisofa/minisofa.obj</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>false</self_collide>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1</mass>
+        </inertial>
+        <enable_wind>false</enable_wind>
+        <kinematic>false</kinematic>
+      </link>
+      <pose>-1.3024230265643115 1.1561495444903591 0 0 0 3.1407963310000002</pose>
       <self_collide>false</self_collide>
     </model>
     <light name='sun' type='directional'>
