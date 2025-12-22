@@ -8,9 +8,9 @@ endif()
 # 의존성 찾기 (사실 이 패키지는 코드 빌드가 없어서 필수적이진 않음)
 find_package(ament_cmake REQUIRED)
 
-# launch, maps, worlds 폴더를 설치 경로로 복사
+# launch, maps, worlds, models, params 폴더를 설치 경로로 복사
 install(DIRECTORY
-  launch maps worlds models
+  launch maps worlds models params
   DESTINATION share/${PROJECT_NAME}
 )
 

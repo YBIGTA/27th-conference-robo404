@@ -128,8 +128,10 @@ def generate_launch_description():
     return LaunchDescription([
         world_name_arg,
         gui_arg,
+
         LogInfo(msg=["[DEBUG] User GUI input: ", gui_config]),
         LogInfo(msg=["[DEBUG] Generated Headless Flag: ", headless_flag]),
+
         gz_resource_path,
         gz_plugin_path,
         gz_sim,

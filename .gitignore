@@ -55,7 +55,6 @@ Thumbs.db
 # YOLO Training
 training/data/images/
 training/data/labels/
-training/weights/
 !training/data/dataset.yaml
 
 install/
