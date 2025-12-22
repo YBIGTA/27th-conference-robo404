@@ -2,9 +2,9 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, AppendEnvironmentVariable, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, AppendEnvironmentVariable, DeclareLaunchArgument, LogInfo
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 
 def generate_launch_description():
@@ -18,15 +18,21 @@ def generate_launch_description():
     world_name_arg = DeclareLaunchArgument(
         'world_name',
         default_value='my_world.sdf',
-        description='worlds 폴더 안에 있는 로드할 SDF 월드 파일 이름'
+        description='World file name'
     )
-
     world_name_config = LaunchConfiguration('world_name')
+    
+    gui_arg = DeclareLaunchArgument(
+        'gui',
+        default_value='true',
+        description='Set to "false" to run headless.'
+    )
+    gui_config = LaunchConfiguration('gui')
 
     world_path = PathJoinSubstitution([
-        pkg_my_robot_bringup, # 패키지 경로
-        'worlds',             # worlds 폴더
-        world_name_config     # 동적으로 입력받은 파일 이름
+        pkg_my_robot_bringup, 
+        'worlds',            
+        world_name_config    
     ])
 
     models_path = os.path.join(pkg_turtlebot3_gazebo, 'models')
@@ -43,11 +49,17 @@ def generate_launch_description():
         value='/opt/ros/jazzy/lib/gz-sim-8/plugins'
     )
 
+    headless_flag = PythonExpression([
+        "' -s' if '", gui_config, "'.lower() == 'false' else ''"
+    ])
+
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')
         ),
-        launch_arguments={'gz_args': ['-r ', world_path]}.items(),
+        launch_arguments={
+            'gz_args': ['-r', headless_flag, ' ', world_path]
+        }.items(),
     )
 
     # Robot State Publisher
@@ -114,7 +126,11 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        LogInfo(msg=["[DEBUG] User GUI input: ", gui_config]),
+        LogInfo(msg=["[DEBUG] Generated Headless Flag: ", headless_flag]),
+        
         world_name_arg,
+        gui_arg,
         gz_resource_path,
         gz_plugin_path,
         gz_sim,
