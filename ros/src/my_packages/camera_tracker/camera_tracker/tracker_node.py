@@ -104,26 +104,27 @@ class CameraTrackerNode(Node):
         target_y = (self.image_height / 2) + self.target_y_offset
         offset_y = cy - target_y
 
-        # Check dead zone - if object is near center, camera is stable
-        if abs(offset_x) < self.dead_zone and abs(offset_y) < self.dead_zone:
-            self.last_detection_time = self.get_clock().now()
-            self.tracking_active = True
-            # Publish stable status (only on state change)
-            if not self.is_stable:
-                self.is_stable = True
-                stable_msg = Bool()
-                stable_msg.data = True
-                self.stable_pub.publish(stable_msg)
-            return
+        # Update tracking state
+        self.last_detection_time = self.get_clock().now()
+        self.tracking_active = True
 
-        # Camera is moving, publish unstable
-        if self.is_stable:
+        # Check dead zone - publish stable status (tracking continues regardless)
+        in_dead_zone = abs(offset_x) < self.dead_zone and abs(offset_y) < self.dead_zone
+
+        if in_dead_zone and not self.is_stable:
+            self.is_stable = True
+            stable_msg = Bool()
+            stable_msg.data = True
+            self.stable_pub.publish(stable_msg)
+            self.get_logger().info('Camera stable - object in dead zone')
+        elif not in_dead_zone and self.is_stable:
             self.is_stable = False
             stable_msg = Bool()
             stable_msg.data = False
             self.stable_pub.publish(stable_msg)
+            self.get_logger().info('Camera unstable - object left dead zone')
 
-        # Convert pixel offset to angular offset
+        # Convert pixel offset to angular offset (always continue tracking)
         rad_per_pixel_h = self.fov_h / self.image_width
         rad_per_pixel_v = self.fov_v / self.image_height
 
