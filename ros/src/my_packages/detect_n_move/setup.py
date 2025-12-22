@@ -21,7 +21,6 @@ setup(
         'console_scripts': [
             'detection_handler = detect_n_move.detection_handler:main',
             'movement_controller = detect_n_move.movement_controller:main',
-            'detect_n_move_node = detect_n_move.detect_n_move_node:main',
         ],
     },
 )

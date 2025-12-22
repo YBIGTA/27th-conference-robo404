@@ -1,220 +1,222 @@
 #!/usr/bin/env python3
 """
-Detection Handler Node
-
-Subscribes to YOLO detections and performs specific actions based on detected objects.
-For example, if a chair is detected, it can trigger navigation towards the chair.
+Detection Handler Node (Nav2 Enabled) - FIXED for yolo_msgs
 """
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from std_msgs.msg import String, Bool
-from geometry_msgs.msg import Point
-from yolo_msgs.msg import DetectionArray
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
+import statistics
+import tf2_ros
+import tf2_geometry_msgs
+from tf2_ros import Buffer, TransformListener
 
+# Import the correct message type
+from yolo_msgs.msg import DetectionArray
 
 class DetectionHandlerNode(Node):
     def __init__(self):
         super().__init__('detection_handler_node')
 
-        # Declare parameters
+        # Parameters
         self.declare_parameter('confidence_threshold', 0.7)
         self.declare_parameter('target_objects', ['chair', 'red_ball'])
-        self.declare_parameter('detection_timeout', 5.0)  # seconds
+        self.declare_parameter('detection_timeout', 5.0)
         
-        # Load parameters
         self.confidence_threshold = self.get_parameter('confidence_threshold').value
         self.target_objects = self.get_parameter('target_objects').value
         self.detection_timeout = self.get_parameter('detection_timeout').value
         
-        # State tracking
+        # State
+        self.frame_count = 0
+        self.verification_window = 10
+        self.required_confirmations = 2
+        self.verification_states = {
+            obj: {'state': 'IDLE', 'start_frame': 0, 'hits': 0, 'stored_detections': []} 
+            for obj in self.target_objects
+        }
         self.last_detected_objects = {}
         self.current_target = None
-        self.target_position = None
-        
-        # QoS for YOLO detections
-        qos = QoSProfile(depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT)
 
-        # Subscriber: YOLO detections
-        self.detection_sub = self.create_subscription(
-            DetectionArray,
-            '/yolo/detections',
-            self.detection_callback,
-            qos
-        )
+        # Tools
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+        # Subscribers
+        qos = QoSProfile(depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT)
+        self.create_subscription(DetectionArray, '/yolo/detections_3d', self.detection_callback, qos)
 
         # Publishers
         self.event_pub = self.create_publisher(String, '/detection_events', 10)
-        self.target_pub = self.create_publisher(Point, '/target_position', 10)
+        self.target_pose_pub = self.create_publisher(PoseStamped, '/target_pose', 10)
         self.movement_cmd_pub = self.create_publisher(String, '/movement_command', 10)
-
-        # Timer for detection timeout check
+        
         self.timer = self.create_timer(1.0, self.check_timeouts)
-
-        self.get_logger().info(
-            f'Detection Handler Node initialized\n'
-            f'  Confidence threshold: {self.confidence_threshold}\n'
-            f'  Target objects: {self.target_objects}\n'
-            f'  Detection timeout: {self.detection_timeout}s'
-        )
+        self.get_logger().info('Nav2 Detection Handler Initialized.')
 
     def detection_callback(self, msg: DetectionArray):
-        """Process YOLO detections and trigger actions for specific objects."""
-        if not msg.detections:
-            return
-
-        # Filter detections by confidence and target objects
-        relevant_detections = []
-        for detection in msg.detections:
-            if (detection.score >= self.confidence_threshold and 
-                detection.class_name in self.target_objects):
-                relevant_detections.append(detection)
-
-        if not relevant_detections:
-            return
-
-        # Sort by confidence score (highest first)
-        relevant_detections.sort(key=lambda d: d.score, reverse=True)
+        self.frame_count += 1
+        detections_in_frame = {} 
         
-        # Process the highest confidence detection
-        best_detection = relevant_detections[0]
-        self.handle_object_detection(best_detection)
-            
-    def handle_object_detection(self, detection):
-        """Handle detection of a specific object type."""
+        for d in msg.detections:
+            # CHECK 1: Ensure 3D data exists
+            if d.bbox3d.center.position.z == 0.0:
+                continue
+
+            # CHECK 2: Access fields directly (yolo_msgs style)
+            # Old: d.results[0].hypothesis.score
+            # New: d.score
+            if d.score < self.confidence_threshold:
+                continue
+
+            # Old: d.results[0].hypothesis.class_id
+            # New: d.class_name (or d.class_id depending on version, usually class_name is the string)
+            class_name = d.class_name 
+
+            if class_name not in detections_in_frame:
+                detections_in_frame[class_name] = d
+            elif d.score > detections_in_frame[class_name].score:
+                detections_in_frame[class_name] = d
+
+        for target_name in self.target_objects:
+            self.update_verification_logic(target_name, detections_in_frame)
+
+    def update_verification_logic(self, target_name, detections_in_frame):
+        state_info = self.verification_states[target_name]
+        detection = detections_in_frame.get(target_name)
+        
+        if state_info['state'] == 'IDLE':
+            if detection:
+                state_info['state'] = 'VERIFYING'
+                state_info['start_frame'] = self.frame_count
+                state_info['hits'] = 0
+                state_info['stored_detections'] = [detection]
+        
+        elif state_info['state'] == 'VERIFYING':
+            if (self.frame_count - state_info['start_frame']) > self.verification_window:
+                self.reset_state(target_name)
+                return
+
+            if detection: 
+                state_info['hits'] += 1
+                state_info['stored_detections'].append(detection)
+
+            if state_info['hits'] >= self.required_confirmations:
+                state_info['state'] = 'CONFIRMED'
+                robust_detection = self.get_robust_target_location(state_info['stored_detections'])
+                if robust_detection:
+                    self.process_verified_target(robust_detection)
+
+        elif state_info['state'] == 'CONFIRMED':
+            if detection:
+                self.process_verified_target(detection)
+
+    def get_robust_target_location(self, detection_list):
+        if not detection_list: return None
+        
+        # Access bbox3d directly
+        x_coords = [d.bbox3d.center.position.x for d in detection_list]
+        y_coords = [d.bbox3d.center.position.y for d in detection_list]
+        z_coords = [d.bbox3d.center.position.z for d in detection_list]
+        
+        robust_det = detection_list[-1] 
+        robust_det.bbox3d.center.position.x = statistics.median(x_coords)
+        robust_det.bbox3d.center.position.y = statistics.median(y_coords)
+        robust_det.bbox3d.center.position.z = statistics.median(z_coords)
+        return robust_det
+
+    def process_verified_target(self, detection):
+        # CHECK 3: Access class_name directly
         obj_class = detection.class_name
-        confidence = detection.score
         
-        # Update last detected objects
-        self.last_detected_objects[obj_class] = {
-            'confidence': confidence,
-            'timestamp': self.get_clock().now(),
-            'bbox': detection.bbox,
-            'detection': detection
-        }
+        self.last_detected_objects[obj_class] = self.get_clock().now()
         
-        # Log the detection
-        self.get_logger().info(
-            f'Detected {obj_class} with confidence {confidence:.2f}'
-        )
-        
-        # Publish detection event
-        event_msg = String()
-        event_msg.data = f'detected:{obj_class}:{confidence:.2f}'
-        self.event_pub.publish(event_msg)
-        
-        # Set as current target if not already tracking something
-        if self.current_target != obj_class:
-            self.set_target(obj_class, detection)
-        
-        # Perform object-specific actions
-        if obj_class == 'chair':
-            self.handle_chair_detection(detection)
-        elif obj_class == 'red_ball':
-            self.handle_red_ball_detection(detection)
-    
-    def set_target(self, obj_class, detection):
-        """Set a new target object for tracking and movement."""
-        self.current_target = obj_class
-        
-        # Calculate target position from bounding box center
-        # Note: This is in image coordinates, would need conversion to world coordinates
-        bbox_center_x = detection.bbox.center.position.x
-        bbox_center_y = detection.bbox.center.position.y
-        
-        # For now, use normalized image coordinates (-1 to 1)
-        # In a real system, you'd convert this to world coordinates using depth info
-        target_point = Point()
-        target_point.x = (bbox_center_x - 960.0) / 960.0  # Normalize assuming 1920 width
-        target_point.y = (bbox_center_y - 540.0) / 540.0  # Normalize assuming 1080 height
-        target_point.z = 0.0
-        
-        self.target_position = target_point
-        self.target_pub.publish(target_point)
-        
-        self.get_logger().info(f'Target set to {obj_class} at position ({target_point.x:.2f}, {target_point.y:.2f})')
-    
-    def handle_chair_detection(self, detection):
-        """Specific actions when a chair is detected."""
-        self.get_logger().info('Chair detected! Triggering chair-specific behavior...')
-        
-        # Publish movement command to approach the chair
-        cmd_msg = String()
-        cmd_msg.data = 'approach_chair'
-        self.movement_cmd_pub.publish(cmd_msg)
-        
-        # Get chair position
-        chair_x = detection.bbox.center.position.x
-        chair_y = detection.bbox.center.position.y
-        
-        self.get_logger().info(f'Chair location in image: ({chair_x:.1f}, {chair_y:.1f})')
-    
-    def handle_red_ball_detection(self, detection):
-        """Specific actions when a red_ball is detected."""
-        self.get_logger().info('Red ball detected! Triggering red ball-specific behavior...')
-        
-        # Publish movement command to approach red ball
-        cmd_msg = String()
-        cmd_msg.data = 'approach_red_ball'
-        self.movement_cmd_pub.publish(cmd_msg)
-        
-        ball_x = detection.bbox.center.position.x
-        ball_y = detection.bbox.center.position.y
-        
-        self.get_logger().info(f'Red ball location in image: ({ball_x:.1f}, {ball_y:.1f})')
-        
-        # Publish specific red ball event
-        event_msg = String()
-        event_msg.data = f'red_ball_found:x={ball_x:.1f},y={ball_y:.1f}'
-        self.event_pub.publish(event_msg)
- 
-    
-    def check_timeouts(self):
-        """Check for detection timeouts and clear old targets."""
-        current_time = self.get_clock().now()
-        timeout_ns = self.detection_timeout * 1e9
-        
-        # Remove old detections
-        to_remove = []
-        for obj_class, data in self.last_detected_objects.items():
-            elapsed = (current_time - data['timestamp']).nanoseconds
-            if elapsed > timeout_ns:
-                to_remove.append(obj_class)
-        
-        for obj_class in to_remove:
-            del self.last_detected_objects[obj_class]
-            if self.current_target == obj_class:
-                self.get_logger().info(f'Target {obj_class} lost due to timeout')
-                self.current_target = None
-                self.target_position = None
-                
-                # Publish stop command
-                cmd_msg = String()
-                cmd_msg.data = 'stop'
-                self.movement_cmd_pub.publish(cmd_msg)
-    
-    def get_last_detection(self, object_class):
-        """Get the last detection info for a specific object class."""
-        return self.last_detected_objects.get(object_class, None)
-    
-    def get_current_target(self):
-        """Get the current target object being tracked."""
-        return self.current_target, self.target_position
+        msg = String()
+        msg.data = f"detected:{obj_class}"
+        self.event_pub.publish(msg)
 
+        if self.current_target != obj_class:
+            map_pose = self.get_3d_map_pose(detection)
+            
+            if map_pose:
+                self.current_target = obj_class
+                self.get_logger().info(f"Target locked: {obj_class} at Map (x={map_pose.pose.position.x:.2f}, y={map_pose.pose.position.y:.2f})")
+                
+                self.target_pose_pub.publish(map_pose)
+                
+                cmd = String()
+                cmd.data = f"approach_{obj_class}"
+                self.movement_cmd_pub.publish(cmd)
+
+    def get_3d_map_pose(self, detection):
+        """Convert 3D detection directly to map pose"""
+        try:
+            # FIX 1: Use the correct class from geometry_msgs
+            p_cam = PoseStamped() 
+            p_cam.header.frame_id = detection.bbox3d.frame_id 
+            
+            # FIX 2: Use the Node's clock for "Right Now"
+            # rclpy.time.Time() creates a 0-timestamp which causes extrapolation errors
+            p_cam.header.stamp = self.get_clock().now().to_msg()
+            
+            p_cam.pose.position = detection.bbox3d.center.position
+            p_cam.pose.orientation.w = 1.0 
+
+            # FIX 3: Use the buffer's built-in transform method
+            # This handles the lookup, the math, and the timeout automatically.
+            # We give it 1.0 second to find the transform to avoid timing issues.
+            target_pose = self.tf_buffer.transform(p_cam, 'map', timeout=rclpy.duration.Duration(seconds=1.0))
+            
+            return target_pose
+            
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            self.get_logger().warn(f"TF Error: {e}")
+            return None
+    """
+    def get_3d_map_pose(self, detection):
+        try:
+            p_cam = tf2_geometry_msgs.PoseStamped()
+            # yolo_msgs frame_id is usually inside the bbox3d or the main header
+            # Note: detection.header might differ, but bbox3d.frame_id is what we set in detect_3d_node
+            p_cam.header.frame_id = detection.bbox3d.frame_id 
+            p_cam.header.stamp = rclpy.time.Time().to_msg()
+            
+            p_cam.pose.position = detection.bbox3d.center.position
+            p_cam.pose.orientation.w = 1.0 
+
+            transform = self.tf_buffer.lookup_transform('map', p_cam.header.frame_id, rclpy.time.Time())
+            p_map = tf2_geometry_msgs.do_transform_pose(p_cam, transform)
+            
+            target_pose = PoseStamped()
+            target_pose.header.frame_id = 'map'
+            target_pose.header.stamp = self.get_clock().now().to_msg()
+            target_pose.pose = p_map.pose
+            
+            return target_pose
+            
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            self.get_logger().warn(f"TF Error: {e}")
+            return None
+    """
+
+    def reset_state(self, obj_class):
+        if obj_class in self.verification_states:
+            self.verification_states[obj_class]['state'] = 'IDLE'
+            self.verification_states[obj_class]['hits'] = 0
+            self.verification_states[obj_class]['stored_detections'] = []
+
+    def check_timeouts(self):
+        pass
 
 def main(args=None):
     rclpy.init(args=args)
     node = DetectionHandlerNode()
-
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
-
+    except KeyboardInterrupt: pass
+    finally: node.destroy_node(); rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

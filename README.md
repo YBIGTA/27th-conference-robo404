@@ -122,6 +122,12 @@ ros2 launch yolo_bringup yolov8.launch.py \
   model:=yolov8n device:=cuda:0 input_image_topic:=/camera/image_raw
 ```
 
+```bash
+docker exec -it ros-dev bash
+ros2 launch yolo_bringup yolov8.launch.py \
+  model:=yolov8n device:=cuda:0 input_image_topic:=/camera/image_raw use_3d:=True
+```
+
 ### 4. 이미지 확인 / FPS 체크
 
 ```bash
@@ -131,3 +137,7 @@ ros2 run rqt_image_view rqt_image_view
 ros2 topic hz /yolo/detections
 ```
 
+### 5. Detect_n_Move
+```bash
+ros2 launch detect_n_move detect_n_move.launch.py use_sim_time:=true
+```
