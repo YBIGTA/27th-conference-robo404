@@ -67,3 +67,7 @@ gz_label_world_v4/models/*/materials/textures/*.png
 
 # survey captures
 ros/survey_captures/
+
+# dataset
+train/
+valid/
