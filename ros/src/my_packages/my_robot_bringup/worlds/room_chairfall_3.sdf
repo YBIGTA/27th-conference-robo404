@@ -332,7 +332,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://CoffeeTable/CoffeeTable.obj</uri>
+              <uri>model://CoffeeTable/CoffeeTable.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -340,7 +340,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://CoffeeTable/CoffeeTable.obj</uri>
+              <uri>model://CoffeeTable/CoffeeTable.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -384,7 +384,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://minisofa/minisofa.obj</uri>
+              <uri>model://minisofa/minisofa.obj</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -392,7 +392,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://minisofa/minisofa.obj</uri>
+              <uri>model://minisofa/minisofa.obj</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -436,7 +436,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://Chair/Chair.obj</uri>
+              <uri>model://Chair/Chair.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -444,7 +444,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://Chair/Chair.obj</uri>
+              <uri>model://Chair/Chair.obj</uri>
               <scale>0.0081700000000000002 0.0081700000000000002 0.0081700000000000002</scale>
             </mesh>
           </geometry>
@@ -1031,14 +1031,14 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://LampAndStand/LampAndStand.obj</uri>
+              <uri>model://LampAndStand/LampAndStand.obj</uri>
             </mesh>
           </geometry>
         </visual>
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://LampAndStand/LampAndStand_Col.obj</uri>
+              <uri>model://LampAndStand/LampAndStand_Col.obj</uri>
             </mesh>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -1369,7 +1369,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://minisofa/minisofa.obj</uri>
+              <uri>model://minisofa/minisofa.obj</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -1377,7 +1377,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>file:///home/robo/27th-conference-robo404/ros/src/my_packages/my_robot_bringup/worlds/model://minisofa/minisofa.obj</uri>
+              <uri>model://minisofa/minisofa.obj</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
