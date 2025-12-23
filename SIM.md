@@ -24,6 +24,7 @@ docker run -it --rm \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v $(pwd)/ros:/root/ros \
   -v $(pwd)/training:/root/training \
+  -p 8501:8501 \
   my-ros-jazzy-dev
 ```
 
@@ -96,3 +97,18 @@ ros2 launch vision_api analyzer.launch.py \
   api_provider:=huggingface \
   prompt:="이 의자의 상태를 확인하고, 위험한 상태인지 판단해. 답변은 구체적으로, 간결한 문체로 해"
 ```
+
+### 7. Streamlit 대시보드
+
+Vision API 분석 결과를 웹 브라우저에서 확인할 수 있습니다.
+
+```bash
+streamlit run /root/ros/src/my_packages/vision_api/vision_api/dashboard.py --server.port 8501
+```
+
+브라우저에서 `http://localhost:8501` 접속
+
+**표시 내용:**
+- 실시간 카메라 이미지
+- 최신 분석 결과
+- 분석 히스토리 (최근 20개)
