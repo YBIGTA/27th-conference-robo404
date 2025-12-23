@@ -1,6 +1,64 @@
-# 위험 탐지 AI 로봇 시스템 (Hazard Detection AI Robot System)
+<div align="center">
 
-> 실내 환경에서 자율 순찰하며 가구의 위험 상태를 실시간으로 탐지하고 AI 기반 안전성 평가를 제공하는 지능형 로봇 시스템
+# ROBO 404
+
+### *Autonomous Hazard Detection Robot System*
+
+<br>
+
+**자율 순찰 · 실시간 탐지 · AI 안전성 평가**
+
+<br>
+
+![ROS2](https://img.shields.io/badge/ROS2-Jazzy-22314E?style=flat-square&logo=ros&logoColor=white)
+![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-00FFFF?style=flat-square)
+![Gazebo](https://img.shields.io/badge/Gazebo-Garden-F58025?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-GPU-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+<br>
+
+[시작하기](#8-실행-방법-how-to-run) · [시스템 구조](#3-전체-시스템-구조-system-architecture) · [API 설정](#api-키-설정) · [팀 소개](#12-팀-구성-및-역할-team-robo-404)
+
+</div>
+
+---
+
+## 📋 목차
+
+1. [프로젝트 개요](#1-프로젝트-개요-overview)
+2. [문제 정의](#2-문제-정의-problem-statement)
+3. [시스템 구조](#3-전체-시스템-구조-system-architecture)
+4. [기술 스택](#4-기술-스택-tech-stack)
+5. [데이터 설명](#5-데이터-설명-dataset)
+6. [핵심 방법론](#6-핵심-방법론-methodology)
+7. [실험 및 결과](#7-실험-및-결과-experiments--results)
+8. [실행 방법](#8-실행-방법-how-to-run)
+9. [프로젝트 구조](#9-프로젝트-구조-directory-structure)
+10. [ROS2 인터페이스](#10-ros2-인터페이스-ros2-interface)
+11. [한계점 및 향후 계획](#11-한계점-및-향후-계획-limitations--future-work)
+12. [팀 구성](#12-팀-구성-및-역할-team-robo-404)
+
+---
+
+## 🚀 빠른 시작 (Quick Start)
+
+```bash
+# 1. 저장소 클론 및 설정
+git clone <repository-url> && cd 27th-conference-robo404
+chmod +x setup_repos.sh && ./setup_repos.sh
+
+# 2. Docker 빌드 및 실행
+docker build -t my-ros-jazzy-dev .
+xhost +local:root && docker run -it --rm --gpus all \
+  -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v $(pwd)/ros:/root/ros -v $(pwd)/training:/root/training \
+  my-ros-jazzy-dev
+
+# 3. 시뮬레이션 시작 (컨테이너 내부)
+ros2 launch my_robot_bringup my_launch.py world_name:=room_chairfall_1.sdf
+```
+
+> 📖 자세한 실행 방법은 [실행 방법](#8-실행-방법-how-to-run) 섹션을 참고하세요.
 
 ---
 
@@ -333,7 +391,110 @@ ros2 topic echo /vision_analysis_result
 
 ---
 
-## 10. 한계점 및 향후 계획 (Limitations & Future Work)
+## 10. ROS2 인터페이스 (ROS2 Interface)
+
+### 주요 토픽 (Topics)
+
+| 토픽명 | 타입 | 방향 | 설명 |
+|--------|------|------|------|
+| `/camera/image_raw` | `sensor_msgs/Image` | Pub | Gazebo 카메라 원본 영상 |
+| `/yolo/detections` | `yolo_msgs/Detections` | Pub | YOLO 객체 탐지 결과 |
+| `/camera/pan_cmd` | `std_msgs/Float64` | Pub | 카메라 Pan 제어 명령 |
+| `/camera/tilt_cmd` | `std_msgs/Float64` | Pub | 카메라 Tilt 제어 명령 |
+| `/camera/stable` | `std_msgs/Bool` | Pub | 카메라 안정화 상태 |
+| `/vision/analysis_result` | `std_msgs/String` | Pub | AI 비전 분석 결과 |
+| `/scan` | `sensor_msgs/LaserScan` | Pub | LIDAR 스캔 데이터 |
+| `/odom` | `nav_msgs/Odometry` | Pub | 로봇 오도메트리 |
+| `/cmd_vel` | `geometry_msgs/Twist` | Sub | 로봇 속도 명령 |
+
+#### 토픽 상세 설명
+
+**`/camera/image_raw`**
+- Gazebo 시뮬레이션의 TurtleBot3 카메라에서 발행되는 RGB 이미지 스트림
+- 해상도: 640x480, 30 FPS
+- YOLO 객체 탐지 및 Vision API 분석의 입력 소스로 사용
+
+**`/yolo/detections`**
+- YOLOv8 모델이 탐지한 객체 정보 (바운딩 박스, 클래스, 신뢰도)
+- 탐지 클래스: chair, sofa, table, red_ball
+- Camera Tracker가 구독하여 추적 대상 선정에 활용
+
+**`/camera/pan_cmd` / `/camera/tilt_cmd`**
+- 카메라 짐벌의 Pan(좌우)/Tilt(상하) 각도 제어 명령
+- 단위: radian, 범위: Pan ±1.5rad, Tilt ±0.5rad
+- 비례제어 알고리즘으로 탐지된 객체를 화면 중앙에 유지
+
+**`/camera/stable`**
+- 카메라가 객체를 안정적으로 추적 중인지 나타내는 플래그
+- `True`: 객체가 데드존 내에 위치 (Vision API 분석 트리거)
+- `False`: 객체 추적 중 또는 미탐지 상태
+
+**`/vision/analysis_result`**
+- AI Vision API(OpenAI/Gemini/HuggingFace)의 안전성 분석 결과 텍스트
+- 카메라 안정화 시 자동으로 분석 실행 후 발행
+- 위험 상태 판단 및 상세 설명 포함
+
+**`/scan`**
+- TurtleBot3의 360° LIDAR 센서 데이터
+- Nav2 네비게이션 스택에서 장애물 회피 및 SLAM에 활용
+- 범위: 0.12m ~ 3.5m
+
+**`/odom`**
+- 로봇의 위치(x, y, z) 및 방향(quaternion) 정보
+- 엔코더 기반 추정값, Nav2 위치 추정의 초기값으로 사용
+
+**`/cmd_vel`**
+- 로봇 이동 속도 명령 (linear.x, angular.z)
+- Nav2 또는 텔레옵에서 발행, TurtleBot3 컨트롤러가 구독
+
+### 주요 파라미터 (Parameters)
+
+#### Camera Tracker
+| 파라미터 | 기본값 | 설명 |
+|----------|--------|------|
+| `kp_pan` | 0.001 | Pan 비례제어 게인 |
+| `kp_tilt` | 0.0 | Tilt 비례제어 게인 |
+| `dead_zone` | 500.0 | 안정화 판단 데드존 (픽셀) |
+| `pan_limit` | 1.5 | Pan 각도 제한 (rad) |
+| `tilt_limit` | 0.5 | Tilt 각도 제한 (rad) |
+
+#### Vision API
+| 파라미터 | 기본값 | 설명 |
+|----------|--------|------|
+| `api_provider` | `openai` | API 제공자 (openai/gemini/huggingface) |
+| `prompt` | - | AI 분석 프롬프트 |
+| `cooldown` | 10.0 | API 호출 쿨다운 (초) |
+
+#### YOLO Detection
+| 파라미터 | 기본값 | 설명 |
+|----------|--------|------|
+| `model` | - | YOLO 모델 경로 (.pt) |
+| `device` | `cuda:0` | 추론 디바이스 |
+| `threshold` | 0.5 | 신뢰도 임계값 |
+| `input_image_topic` | `/camera/image_raw` | 입력 이미지 토픽 |
+
+### 데이터 흐름 (Data Flow)
+
+```
+/camera/image_raw ──→ [YOLO Node] ──→ /yolo/detections
+                                            │
+                                            ▼
+                                    [Camera Tracker]
+                                            │
+                        ┌───────────────────┼───────────────────┐
+                        ▼                   ▼                   ▼
+                /camera/pan_cmd     /camera/tilt_cmd     /camera/stable
+                                                                │
+                                                                ▼
+                                                        [Vision API Node]
+                                                                │
+                                                                ▼
+                                                    /vision/analysis_result
+```
+
+---
+
+## 11. 한계점 및 향후 계획 (Limitations & Future Work)
 
 ### 현재 한계점
 - **시뮬레이션 환경**: 실제 물리 환경과의 차이로 인한 제약
@@ -362,7 +523,7 @@ ros2 topic echo /vision_analysis_result
 
 ---
 
-## 11. 팀 구성 및 역할 (Team ROBO 404)
+## 12. 팀 구성 및 역할 (Team ROBO 404)
 
 <div align="center">
   <table>
@@ -389,15 +550,3 @@ ros2 topic echo /vision_analysis_result
     </tr>
   </table>
 </div>
-
----
-
-## 📞 지원 및 문의 (Support)
-
-- **이슈 리포트**: GitHub Issues 활용
-- **기술 문의**: 각 개발자 GitHub 프로필 참조
-- **시연 영상**: [데모 링크 예정]
-
----
-
-*본 프로젝트는 27회 대학생 로봇 경진대회를 위해 개발되었습니다.*
