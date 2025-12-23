@@ -31,11 +31,19 @@ fi
 ENV_FILE="${ROS_WS}/src/my_packages/vision_api/.env"
 if [ -f "$ENV_FILE" ]; then
   echo "[ENTRYPOINT] Loading Vision API keys from .env..."
+
+  # Source in current shell
   source "$ENV_FILE"
-  export VISION_API_KEY="${OPENAI_API_KEY:-}"
-  export OPENAI_API_KEY="${OPENAI_API_KEY:-}"
-  export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
-  export HUGGINGFACE_API_TOKEN="${HUGGINGFACE_API_TOKEN:-}"
+
+  # Add to .bashrc so all future shells (docker exec) also get the vars
+  if ! grep -q "vision_api/.env" /root/.bashrc; then
+    echo "" >> /root/.bashrc
+    echo "# Auto-load Vision API keys" >> /root/.bashrc
+    echo "if [ -f \"${ENV_FILE}\" ]; then" >> /root/.bashrc
+    echo "  source \"${ENV_FILE}\"" >> /root/.bashrc
+    echo "fi" >> /root/.bashrc
+  fi
+
   echo "[ENTRYPOINT] Vision API keys loaded"
 else
   echo "[INFO] Vision API .env not found. Create it at: $ENV_FILE"

@@ -8,16 +8,8 @@ docker build -t my-ros-jazzy-dev .
 
 ## ▶️ 3. 실행 순서
 
-### 0-0. Setup API Keys (First Time Only)
-
-```bash
-# 1. Copy environment template
-cp ros/src/my_packages/vision_api/.env.example ros/src/my_packages/vision_api/.env
-
-# 2. Edit .env file and add your actual API keys
-nano ros/src/my_packages/vision_api/.env
-# (Keys will be auto-loaded by entrypoint.sh when container starts)
-```
+### 0-0. Setup API Keys on your local
+set .env under ros/src/my_packages/vision_api/.env
 
 ### 0-1. 컨테이너 실행
 

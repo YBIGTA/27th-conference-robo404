@@ -13,10 +13,11 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-rqt-image-view \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. yolo_ros의 requirements.txt 를 이미지 안으로 복사
+# 3. yolo_ros와 vision_api의 requirements.txt 를 이미지 안으로 복사
 #    => 로컬 ./ros/src/yolo_ros/requirements.txt 가 있어야 함
 #    => 없으면 먼저 ./setup_repos.sh 를 실행하세요
 COPY ./ros/src/external/yolo_ros/requirements.txt /tmp/yolo_requirements.txt
+COPY ./ros/src/my_packages/vision_api/requirements.txt /tmp/vision_api_requirements.txt
 
 # 4. YOLO 전용 venv 생성 + requirements 설치
 #    venv는 /opt/yolo_venv 에 둬서 워크스페이스(ros)와 분리
@@ -25,6 +26,7 @@ RUN python3 -m virtualenv -p python3 /opt/yolo_venv && \
     pip install --upgrade pip && \
     pip install "setuptools<75" && \
     pip install -r /tmp/yolo_requirements.txt && \
+    pip install -r /tmp/vision_api_requirements.txt && \
     deactivate
 
 # 5. bashrc에 ROS/워크스페이스/YOLO 환경 자동 로드 설정
