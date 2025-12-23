@@ -31,7 +31,7 @@ class VisionAnalyzerNode(Node):
             'Describe what you see in this image. Focus on the main object.'
         )
         self.declare_parameter('min_stable_duration', 1.0)
-        self.declare_parameter('analysis_cooldown', 5.0)
+        self.declare_parameter('analysis_cooldown', 30.0)
         self.declare_parameter('image_topic', '/camera/image_raw')
         self.declare_parameter('stable_topic', '/camera/stable')
 

@@ -41,7 +41,7 @@ def generate_launch_description():
 
     cooldown_arg = DeclareLaunchArgument(
         'analysis_cooldown',
-        default_value='5.0',
+        default_value='30.0',
         description='Cooldown between analyses (seconds)'
     )
 
