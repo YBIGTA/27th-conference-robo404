@@ -1,0 +1,23 @@
+# Vision API Environment Variables
+# Copy this file to .env and add your actual API keys
+
+# OpenAI API Key (for GPT-4o Vision)
+# Get from: https://platform.openai.com/api-keys
+export OPENAI_API_KEY="your-openai-api-key-here"
+
+# Google Gemini API Key (for Gemini Vision)
+# Get from: https://makersuite.google.com/app/apikey
+export GEMINI_API_KEY="your-gemini-api-key-here"
+
+# Hugging Face API Token (for VLM models)
+# Get from: https://huggingface.co/settings/tokens
+export HUGGINGFACE_API_TOKEN="your-huggingface-token-here"
+
+# Generic Vision API Key (used by launch file if specific key not set)
+export VISION_API_KEY="${OPENAI_API_KEY}"
+
+# Usage:
+# 1. Copy this file: cp resource/vision_api .env
+# 2. Edit .env with your actual API keys
+# 3. Source before launching: source .env
+# 4. Or add to ~/.bashrc for permanent setup

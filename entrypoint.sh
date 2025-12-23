@@ -27,5 +27,19 @@ else
   colcon build --symlink-install || echo "[WARN] colcon build failed"
 fi
 
+# 3. Load Vision API environment variables if .env exists
+ENV_FILE="${ROS_WS}/src/my_packages/vision_api/.env"
+if [ -f "$ENV_FILE" ]; then
+  echo "[ENTRYPOINT] Loading Vision API keys from .env..."
+  source "$ENV_FILE"
+  export VISION_API_KEY="${OPENAI_API_KEY:-}"
+  export OPENAI_API_KEY="${OPENAI_API_KEY:-}"
+  export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+  export HUGGINGFACE_API_TOKEN="${HUGGINGFACE_API_TOKEN:-}"
+  echo "[ENTRYPOINT] Vision API keys loaded"
+else
+  echo "[INFO] Vision API .env not found. Create it at: $ENV_FILE"
+fi
+
 echo "[ENTRYPOINT] Environment ready. Starting shell..."
 exec "$@"

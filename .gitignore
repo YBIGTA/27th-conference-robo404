@@ -51,6 +51,11 @@ Thumbs.db
 # Virtual environment
 .venv/
 
+# Environment variables (API keys)
+.env
+*.env
+!.env.example
+
 # YOLO Training
 training/data/images/
 training/data/labels/

@@ -8,7 +8,18 @@ docker build -t my-ros-jazzy-dev .
 
 ## ▶️ 3. 실행 순서
 
-### 0-0. 컨테이너 실행
+### 0-0. Setup API Keys (First Time Only)
+
+```bash
+# 1. Copy environment template
+cp ros/src/my_packages/vision_api/.env.example ros/src/my_packages/vision_api/.env
+
+# 2. Edit .env file and add your actual API keys
+nano ros/src/my_packages/vision_api/.env
+# (Keys will be auto-loaded by entrypoint.sh when container starts)
+```
+
+### 0-1. 컨테이너 실행
 
 ```bash
 xhost +local:root
@@ -24,7 +35,7 @@ docker run -it --rm \
   my-ros-jazzy-dev
 ```
 
-### 0-1. additional terminal
+### 0-2. additional terminal
 
 ```bash
 docker exec -it ros-dev bash
@@ -32,8 +43,14 @@ docker exec -it ros-dev bash
 
 ### 1. Gazebo 시뮬레이터
 
+#### Run good world 
 ```bash
 ros2 launch my_robot_bringup my_launch.py
+```
+
+#### Run bad world
+```bash
+ros2 launch my_robot_bringup my_launch.py world_name:=room_chairfall_1.sdf
 ```
 
 ### 2. Nav2
@@ -63,8 +80,27 @@ ros2 launch camera_tracker tracker.launch.py kp_tilt:=0.0 dead_zone:=500.0
 ros2 run rqt_image_view rqt_image_view
 ```
 
-### 6. Openai
+### 6. Vision API (OpenAI/Gemini/Huggingface)
 
+**Note:** Make sure you created `.env` file in step 0-0. Keys are auto-loaded by entrypoint.sh
+
+#### OpenAI (auto-loaded from .env)
 ```bash
-launch vision_api analyzer.launch.py api_provider:=openai prompt:="이 의자의 상태를 확인하고, 위험한 상태인지 판단해. 답변은 구체적으로, 간결한 문체로 해"
+ros2 launch vision_api analyzer.launch.py \
+  api_provider:=openai \
+  prompt:="이 의자의 상태를 확인하고, 위험한 상태인지 판단해. 답변은 구체적으로, 간결한 문체로 해"
+```
+
+#### Gemini (auto-loaded from .env)
+```bash
+ros2 launch vision_api analyzer.launch.py \
+  api_provider:=gemini \
+  prompt:="이 의자의 상태를 확인하고, 위험한 상태인지 판단해. 답변은 구체적으로, 간결한 문체로 해"
+```
+
+#### Huggingface (auto-loaded from .env)
+```bash
+ros2 launch vision_api analyzer.launch.py \
+  api_provider:=huggingface \
+  prompt:="이 의자의 상태를 확인하고, 위험한 상태인지 판단해. 답변은 구체적으로, 간결한 문체로 해"
 ```
