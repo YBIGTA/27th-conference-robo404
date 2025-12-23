@@ -41,93 +41,309 @@ vision_api/
 ### 3.1 전체 시스템 토픽 연결
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           전체 시스템 토픽 연결 구조                           │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              전체 시스템 토픽 연결 구조                                   │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 
-                         /camera/image_raw
-┌───────────┐ ─────────────────┬─────────────────────────┐
-│  Gazebo   │                  │                         │
-│  카메라    │                  ▼                         ▼
-└───────────┘           ┌─────────────┐           ┌─────────────┐
-                        │  yolo_node  │           │ vision_api  │
-                        └──────┬──────┘           └──────┬──────┘
-                               │                         ▲
-                               │ /yolo/detections        │ /camera/stable
-                               ▼                         │
-                        ┌─────────────┐                  │
-                        │   camera    │──────────────────┘
-                        │   tracker   │
-                        └──────┬──────┘
-                               │
-                               │ /camera/pan_cmd
-                               │ /camera/tilt_cmd
-                               ▼
-                        ┌─────────────┐
-                        │   Gazebo    │
-                        │  Pan/Tilt   │
-                        └─────────────┘
+  ┌─────────────────────────────────────────────────────────────────────────────────────┐
+  │                                 Gazebo Simulator                                     │
+  │  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐   │
+  │  │ Camera Sensor│     │ LiDAR Sensor │     │  Pan Joint   │     │  Tilt Joint  │   │
+  │  └──────┬───────┘     └──────┬───────┘     └──────▲───────┘     └──────▲───────┘   │
+  │         │                    │                    │                    │            │
+  └─────────┼────────────────────┼────────────────────┼────────────────────┼────────────┘
+            │                    │                    │                    │
+            │ gz.msgs.Image      │ gz.msgs.LaserScan  │ gz.msgs.Double     │ gz.msgs.Double
+            ▼                    ▼                    │                    │
+  ┌─────────────────────────────────────────────────────────────────────────────────────┐
+  │                              ros_gz_bridge                                           │
+  │                     (Gazebo ↔ ROS 2 메시지 변환)                                      │
+  └───────┬─────────────────────┬─────────────────────┴────────────────────┴────────────┘
+          │                     │                     ▲                    ▲
+          │                     │                     │                    │
+          │ /camera/image_raw   │ /scan               │ /camera/pan_cmd    │ /camera/tilt_cmd
+          │ (sensor_msgs/Image) │ (sensor_msgs/       │ (std_msgs/Float64) │ (std_msgs/Float64)
+          │                     │  LaserScan)         │                    │
+          │                     │                     │                    │
+          ├─────────────────────┼─────────────────────┼────────────────────┤
+          │                     │                     │                    │
+          │   ┌─────────────────┼─────────────────────┼────────────────────┘
+          │   │                 │                     │
+          ▼   │                 ▼                     │
+  ┌───────────┴───┐       ┌──────────┐               │
+  │   yolo_node   │       │   Nav2   │               │
+  │  (yolo_ros)   │       │  Stack   │               │
+  └───────┬───────┘       └──────────┘               │
+          │                                          │
+          │ /yolo/detections                         │
+          │ (yolo_msgs/DetectionArray)               │
+          │                                          │
+          │  ┌───────────────────────────────────────┘
+          │  │
+          ▼  │
+  ┌──────────┴────┐
+  │ camera_tracker│
+  │    node       │
+  └───────┬───────┘
+          │
+          ├──────────────────────────────────────────┐
+          │                                          │
+          │ /camera/stable                           │ /camera/pan_cmd
+          │ (std_msgs/Bool)                          │ /camera/tilt_cmd
+          │                                          │ (std_msgs/Float64)
+          │                                          │
+          │                                          └──────► [ros_gz_bridge → Gazebo]
+          │
+          │   /camera/image_raw (sensor_msgs/Image)
+          │   ───────────────────────────────────────┐
+          ▼                                          │
+  ┌───────────────┐                                  │
+  │vision_analyzer│ ◄────────────────────────────────┘
+  │     node      │
+  └───────┬───────┘
+          │
+          │ /vision/analysis_result
+          │ (std_msgs/String)
+          ▼
+    [외부 시스템]
 ```
-
-**노드별 입출력 토픽:**
-
-| 노드 | 입력 토픽 | 출력 토픽 |
-|------|----------|----------|
-| yolo_node | `/camera/image_raw` | `/yolo/detections` |
-| camera_tracker | `/yolo/detections` | `/camera/pan_cmd`, `/camera/tilt_cmd`, `/camera/stable` |
-| vision_api | `/camera/image_raw`, `/camera/stable` | `/vision/analysis_result` |
-
-**핵심 포인트:**
-- `camera_tracker`는 이미지를 직접 받지 않고, YOLO가 계산한 **bbox 좌표**만 사용
-- `vision_api`는 `camera_tracker`의 `/camera/stable` 신호를 받아 안정화 시점에 분석 수행
-- Gazebo 카메라 이미지는 `yolo_node`와 `vision_api` 두 노드가 동시에 구독
 
 ---
 
-### 3.2 vision_api 노드 내부 흐름
+### 3.2 이미지 플로우 상세 (시간순)
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    vision_analyzer 노드 내부 흐름                     │
-└─────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                이미지 플로우 (시간순)                                    │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 
-[camera_tracker 노드]                    [vision_analyzer 노드]
-        │                                        │
-        ├── /camera/stable (Bool) ──────────────►├── stable_callback()
-        │                                        │      │
-[카메라 드라이버]                                 │      ▼
-        │                                        │   안정화 상태 체크
-        └── /camera/image_raw (Image) ─────────►├── image_callback()
-                                                 │      │
-                                                 │      ▼
-                                                 │   최신 이미지 저장
-                                                 │      │
-                                                 │      ▼
-                                                 │   check_and_analyze()
-                                                 │      │ (타이머 0.1s)
-                                                 │      ▼
-                                                 │   [조건 충족 시]
-                                                 │      │
-                                                 │      ▼
-                                                 │   perform_analysis()
-                                                 │      │
-                                                 │      ▼
-                                                 │   VisionAPIFactory
-                                                 │      │
-                                                 │      ├──► OpenAI API
-                                                 │      ├──► Gemini API
-                                                 │      └──► Huggingface API
-                                                 │      │
-                                                 │      ▼
-                                                 └──► /vision/analysis_result (String)
+시간 ──────────────────────────────────────────────────────────────────────────────────►
+
+[T0] Gazebo Camera Sensor
+      │
+      │ gz.msgs.Image (Gazebo 내부 메시지)
+      ▼
+[T1] ros_gz_bridge
+      │
+      │ /camera/image_raw (sensor_msgs/Image, 30Hz)
+      │
+      ├─────────────────────────────────────────────────────────────────┐
+      │                                                                 │
+      ▼                                                                 │
+[T2] yolo_node                                                          │
+      │                                                                 │
+      │ ┌─────────────────────────────┐                                 │
+      │ │ 1. ROS Image → OpenCV 변환  │                                 │
+      │ │ 2. YOLO 모델 추론           │                                 │
+      │ │ 3. Bounding Box 생성        │                                 │
+      │ └─────────────────────────────┘                                 │
+      │                                                                 │
+      │ /yolo/detections (yolo_msgs/DetectionArray, ~10Hz)              │
+      ▼                                                                 │
+[T3] camera_tracker_node                                                │
+      │                                                                 │
+      │ ┌─────────────────────────────────────────────┐                 │
+      │ │ ※ 이미지를 직접 받지 않음!                   │                 │
+      │ │ 1. 최고 신뢰도 객체 선택 (max score)         │                 │
+      │ │ 2. bbox.center.position (cx, cy) 추출       │                 │
+      │ │ 3. 이미지 중심과 오차 계산                   │                 │
+      │ │ 4. P제어: pan/tilt = current + kp * error   │                 │
+      │ │ 5. Dead zone 체크 (|error| < 80px)          │                 │
+      │ └─────────────────────────────────────────────┘                 │
+      │                                                                 │
+      ├────────────────┬────────────────┐                               │
+      │                │                │                               │
+      │ /camera/       │ /camera/       │ /camera/stable                │
+      │ pan_cmd        │ tilt_cmd       │ (Bool)                        │
+      │ (Float64)      │ (Float64)      │                               │
+      │                │                │                               │
+      ▼                ▼                │                               │
+[T4] ros_gz_bridge                      │                               │
+      │                                 │                               │
+      │ gz.msgs.Double                  │                               │
+      ▼                                 │                               │
+[T5] Gazebo Pan/Tilt Joints             │                               │
+      │                                 │                               │
+      │ (카메라 방향 변경)               │                               │
+      │                                 │                               │
+      └─────► [T0으로 피드백 루프] ◄─────┘                               │
+                                        │                               │
+                                        │                               │
+                                        ▼                               ▼
+[T6] vision_analyzer_node ◄─────────────┴───────────────────────────────┘
+      │                      /camera/stable           /camera/image_raw
+      │
+      │ ┌─────────────────────────────────────────────────────────┐
+      │ │ 분석 트리거 조건 (모두 충족 시):                          │
+      │ │ ① is_stable == True                                     │
+      │ │ ② stable_duration >= 1.0초 (min_stable_duration)        │
+      │ │ ③ 마지막 분석 후 >= 5.0초 (analysis_cooldown)            │
+      │ │ ④ analysis_in_progress == False                         │
+      │ └─────────────────────────────────────────────────────────┘
+      │
+      │ ┌─────────────────────────────────────────────────────────┐
+      │ │ 조건 충족 시:                                            │
+      │ │ 1. latest_image (저장된 최신 이미지) 사용                 │
+      │ │ 2. OpenCV → Base64 인코딩                               │
+      │ │ 3. Vision API 호출 (OpenAI/Gemini/HF)                   │
+      │ │ 4. 결과 발행                                             │
+      │ └─────────────────────────────────────────────────────────┘
+      │
+      │ /vision/analysis_result (std_msgs/String)
+      ▼
+[T7] 외부 시스템 (로깅/알림/액션)
 ```
 
-### 분석 트리거 조건
+---
 
-1. `is_stable == True` (카메라 안정화)
-2. `stable_duration >= min_stable_duration` (최소 안정화 시간)
-3. `elapsed >= analysis_cooldown` (쿨다운 경과)
-4. `analysis_in_progress == False` (중복 분석 방지)
+### 3.3 노드별 토픽 정리
+
+| 노드 | 구독 토픽 (입력) | 발행 토픽 (출력) | 메시지 타입 |
+|------|-----------------|-----------------|------------|
+| **ros_gz_bridge** | Gazebo 센서 | `/camera/image_raw` | `sensor_msgs/Image` |
+| | | `/scan` | `sensor_msgs/LaserScan` |
+| | `/camera/pan_cmd` | Gazebo 조인트 | `std_msgs/Float64` |
+| | `/camera/tilt_cmd` | Gazebo 조인트 | `std_msgs/Float64` |
+| **yolo_node** | `/camera/image_raw` | `/yolo/detections` | `yolo_msgs/DetectionArray` |
+| **camera_tracker** | `/yolo/detections` | `/camera/pan_cmd` | `std_msgs/Float64` |
+| | | `/camera/tilt_cmd` | `std_msgs/Float64` |
+| | | `/camera/stable` | `std_msgs/Bool` |
+| **vision_analyzer** | `/camera/image_raw` | `/vision/analysis_result` | `std_msgs/String` |
+| | `/camera/stable` | | |
+
+---
+
+### 3.4 핵심 포인트
+
+**이미지 경로 (2개 병렬):**
+1. **객체 탐지 경로**: `/camera/image_raw` → `yolo_node` → `/yolo/detections`
+2. **비전 분석 경로**: `/camera/image_raw` → `vision_analyzer` (stable 신호 대기)
+
+**camera_tracker 특징:**
+- 이미지를 직접 받지 **않음** (YOLO의 bbox 좌표만 사용)
+- `/yolo/detections`에서 `bbox.center.position.x/y` (픽셀 좌표)만 추출
+- 이미지 크기 파라미터(`image_width`, `image_height`)로 중심점 계산
+
+**vision_analyzer 트리거:**
+- `/camera/stable == True` 수신 후 1초 이상 유지
+- 이전 분석 후 5초 이상 경과
+- 분석 중이 아님
+
+**피드백 루프:**
+```
+Camera → YOLO → Tracker → Pan/Tilt → Camera (반복)
+                   ↓
+               Stable 신호
+                   ↓
+            Vision Analyzer
+```
+
+---
+
+### 3.5 vision_analyzer 노드 내부 흐름
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                           vision_analyzer 노드 내부 상태 머신                             │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+
+                        ┌─────────────────────────────────────────┐
+                        │           초기화 (Idle)                  │
+                        │  • is_stable = False                    │
+                        │  • latest_image = None                  │
+                        │  • stable_start_time = None             │
+                        └───────────────┬─────────────────────────┘
+                                        │
+         ┌──────────────────────────────┼──────────────────────────────┐
+         │                              │                              │
+         ▼                              ▼                              │
+┌─────────────────────┐    ┌─────────────────────────┐                 │
+│  image_callback()   │    │   stable_callback()     │                 │
+│                     │    │                         │                 │
+│ /camera/image_raw   │    │ /camera/stable          │                 │
+│         │           │    │         │               │                 │
+│         ▼           │    │         ▼               │                 │
+│ ROS Image → OpenCV  │    │ msg.data == True?       │                 │
+│         │           │    │    │          │         │                 │
+│         ▼           │    │   Yes         No        │                 │
+│ self.latest_image   │    │    │          │         │                 │
+│     = image         │    │    ▼          ▼         │                 │
+│                     │    │ is_stable   is_stable   │                 │
+│ (매 프레임 갱신)      │    │  = True      = False   │                 │
+│                     │    │ stable_     stable_     │                 │
+│                     │    │ start_time  start_time  │                 │
+│                     │    │  = now()     = None     │                 │
+└─────────────────────┘    └─────────────────────────┘                 │
+         │                              │                              │
+         └──────────────┬───────────────┘                              │
+                        │                                              │
+                        ▼                                              │
+         ┌──────────────────────────────┐                              │
+         │  check_and_analyze() [0.1s]  │                              │
+         │                              │                              │
+         │  if analysis_in_progress:    │                              │
+         │      return ──────────────────────────────────────────────► │
+         │                              │                              │
+         │  if not is_stable:           │                              │
+         │      return ──────────────────────────────────────────────► │
+         │                              │                              │
+         │  if latest_image is None:    │                              │
+         │      return ──────────────────────────────────────────────► │
+         │                              │                              │
+         │  stable_duration =           │                              │
+         │    now() - stable_start_time │                              │
+         │                              │                              │
+         │  if stable_duration < 1.0s:  │                              │
+         │      return ──────────────────────────────────────────────► │
+         │                              │                              │
+         │  if last_analysis < 5.0s:    │                              │
+         │      return ──────────────────────────────────────────────► │
+         │                              │                              │
+         │  ✓ 모든 조건 충족            │                              │
+         └──────────────┬───────────────┘                              │
+                        │                                              │
+                        ▼                                              │
+         ┌──────────────────────────────┐                              │
+         │    perform_analysis()        │                              │
+         │                              │                              │
+         │ 1. analysis_in_progress      │                              │
+         │    = True                    │                              │
+         │                              │                              │
+         │ 2. api_client.analyze_image( │                              │
+         │      latest_image,           │                              │
+         │      analysis_prompt         │                              │
+         │    )                         │                              │
+         │         │                    │                              │
+         │         ├──► OpenAI GPT-4o   │                              │
+         │         ├──► Gemini 1.5      │                              │
+         │         └──► Huggingface     │                              │
+         │                              │                              │
+         │ 3. last_analysis_time        │                              │
+         │    = now()                   │                              │
+         │                              │                              │
+         │ 4. result_pub.publish(       │                              │
+         │      result.description      │                              │
+         │    )                         │                              │
+         │                              │                              │
+         │ 5. analysis_in_progress      │                              │
+         │    = False                   │                              │
+         └──────────────┬───────────────┘                              │
+                        │                                              │
+                        │ /vision/analysis_result                      │
+                        ▼                                              │
+                 [외부 시스템]                                          │
+                        │                                              │
+                        └──────────────────────────────────────────────┘
+```
+
+### 분석 트리거 조건 (AND)
+
+| 조건 | 변수 | 기준값 | 설명 |
+|------|------|--------|------|
+| ① | `is_stable` | `True` | `/camera/stable` 토픽이 True |
+| ② | `stable_duration` | `>= 1.0s` | 안정화 시작 후 경과 시간 |
+| ③ | `elapsed` | `>= 5.0s` | 마지막 분석 후 경과 시간 |
+| ④ | `analysis_in_progress` | `False` | 현재 분석 중이 아님 |
 
 ---
 
@@ -137,7 +353,7 @@ vision_api/
 
 ROS 2 패키지 메타데이터 정의 파일입니다.
 
-```xml
+```xmlㅎㅎ
 <exec_depend>rclpy</exec_depend>      # ROS 2 Python 클라이언트
 <exec_depend>std_msgs</exec_depend>    # Bool, String 메시지
 <exec_depend>sensor_msgs</exec_depend> # Image 메시지
